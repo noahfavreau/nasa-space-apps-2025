@@ -31,7 +31,7 @@
                     <li><a href="prediction.html">Prediction</a></li>
                     <li><a href="equipe.html">Team</a></li>
                     <li><a
-                            href="https://www.spaceappschallenge.org/2025/challenges/a-world-away-hunting-for-exoplanets-with-ai/?tab=details">Hackaton</a>
+                            href="architecture.html">Architecture</a>
                     </li>
                 </ul>
             </nav>
@@ -40,17 +40,29 @@
     <!-- ------------------------------------------ Section Héro ------------------------------------------ -->
 
     <section class="hero">
-        <div class="wrapper">
-            <div class="media_content">
+        <div class="wrapper hero__wrapper">
+            <div class="media_content hero__content">
                 <h1> A World Away </h1>
-                <p class="description">Lorem ipsum dolor sit amet consectetur. Ut lacus placerat in pulvinar pellentesque. Sed pretium
-                    laoreet eros integer molestie nunc.</p>
-                <a href="prediction.html" class="btn">Faire une prédiction</a>
+                <p class="description">EXOSCAN uses advanced multi-layer AI ensembles to analyze tabular light curve data for precise and reliable exoplanet detection, bringing distant worlds within reach.</p>
+                <a href="prediction.html" class="btn hero__cta" data-loading="prediction">Predict Now</a>
             </div>
 
-            <img src="assets/planetv2.png" alt="image d'une planète">
+            <div class="hero__visual">
+                <img src="assets/planetv2.png" alt="image d'une planète" class="hero__planet">
+            </div>
         </div>
     </section>
+
+    <div class="loading-overlay" role="status" aria-live="polite" aria-hidden="true">
+        <div class="loading-card">
+            <p class="loading-title">Preparing prediction</p>
+            <div class="loading-track">
+                <span class="loading-bar"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/index.js"></script>
 </body>
 
 </html>
