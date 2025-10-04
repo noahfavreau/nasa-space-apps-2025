@@ -1,10 +1,10 @@
 import uuid
-from flask import Flask, jsonify, request, render_template_string
+from flask import Flask, jsonify, request, render_template, render_template_string
 import pandas as pd
 import shap
-import duckdb
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="src/html")
 
 
 # API: /api/prediction/preditiondata
@@ -24,7 +24,7 @@ def preditiondata():  # name follows route; fix typo if desired
         }
         return jsonify(result), 201
     # GET
-    return jsonify({"examples": [EXAMPLE_PREDICTION]}), 200
+    return jsonify({"examples": {}}), 200
 
 
 # API: /api/prediction/graph
@@ -53,14 +53,25 @@ def fillexample():
 # Page: /about
 @app.route("/about", methods=["GET"])
 def about():
-    return render_template_string("src/html/equipe.html")
+    return render_template_string(get_file_as_string("equipe.html"))
 
 
 # Page: /workspace
 @app.route("/workspace", methods=["GET"])
 def workspace():
-    return render_template_string("src/html/index.html")
+    return render_template_string(get_file_as_string("prediction.html"))
+
+
+@app.route("/")
+def landing():
+    return render_template_string(get_file_as_string("index.html"))
+
+
+def get_file_as_string(path: str):
+    a = os.path.join("src/html", path)
+    with open(a, "r") as f:
+        return f.read()
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=8080, ssl_context="adhoc")
