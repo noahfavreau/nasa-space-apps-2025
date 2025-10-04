@@ -57,7 +57,6 @@ html {
     --font-size-h1: 48px;
     --font-size-h2: 36px;
     --font-size-h3: 24px;
-    --font-size-h4: 16px;
 }
   
 
@@ -72,7 +71,8 @@ html {
    Style de base de tous les liens et bouton du site
    ========================================================================== */
 a {
-    color: var(--color-primary);
+    font-family: var(--font-primary);
+    color: var(--color-black);
     text-decoration: none;
 
     &:hover {
@@ -86,10 +86,7 @@ a {
     ========================================================================== */
 h1,
 h2,
-h3,
-h4,
-h5,
-h6 {
+h3 {
     font-family: var(--font-primary);
     line-height: 1;
     font-weight: bold;
@@ -99,13 +96,11 @@ h6 {
 h1 {
     font-size: var(--font-size-h1);
     margin: 0;
-    color: var(--color-primary);
-    letter-spacing: -2px;
+    color: var(--color-white);
 }
   
 h2 {
     font-size: var(--font-size-h2);
-    font-family: var(--font-secondary);
     padding: 5px 0 30px;
 }
   
@@ -114,14 +109,94 @@ h3 {
 }
   
 p {
+    font-family: var(--font-primary);
     margin: 0;
 }
   
 /* ==========================================================================
     WRAPPER / ELEMENT
     ========================================================================== */
-  .wrapper {
+.wrapper {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
-  }
+}
+
+/* ==========================================================================
+    HEADER / COMPONENTS
+    ========================================================================== */
+.header{
+    background-color: var(--color-black);
+    color: var(--color-white);
+
+    padding: var(--spacing-md) 0 var(--spacing-md);
+}
+
+.header .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header .logo{
+    display: flex;
+    align-items: center;
+    font-size: 36px;
+}
+
+.header .material-symbols-outlined{
+    font-size: 48px;
+}
+
+.header ul{
+    display: flex;
+    gap: var(--spacing-md);
+    list-style-type: none;
+}
+
+.header a{
+    color: var(--color-white);
+}
+
+/* ==========================================================================
+    HERO / COMPONENTS
+    ========================================================================== */
+.hero{
+    background: url(../assets/space_background.jpg) center/cover no-repeat;
+    height: 100vh;
+    width: 100vw;
+    color: var(--color-white);
+}
+
+.hero .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.hero .media_content{
+    background-color: rgba(240, 220, 106, 0.5);
+    border-radius: 10px;
+    max-width: 600px;
+
+    padding: 40px 30px 40px 30px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.hero img{
+    height: 500px;
+    width: 500px;
+}
+
+.hero .btn{
+    background-color: var(--color-primary-dark);
+    color: var(--color-white);
+    border-radius: 6px;
+
+    padding: 10px 100px 10px 100px;
+}
