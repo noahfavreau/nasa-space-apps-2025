@@ -2,17 +2,9 @@ import uuid
 from flask import Flask, jsonify, request, render_template_string
 import pandas as pd
 import shap
+import duckdb
 
 app = Flask(__name__)
-
-
-# Example in-memory example data (replace with DB or real logic)
-EXAMPLE_PREDICTION = {
-    "id": 1,
-    "input": {"feature_a": 10, "feature_b": 5},
-    "prediction": 0.78,
-    "timestamp": "2025-10-04T00:00:00Z",
-}
 
 
 # API: /api/prediction/preditiondata
@@ -42,7 +34,7 @@ def prediction_graph():
     Return JSON suitable for client-side graphing (labels + values).
     """
 
-    return jsonify(GRAPH_SAMPLE), 200
+    return jsonify("{}"), 200
 
 
 # API: /api/prediction/fillexample
@@ -61,16 +53,13 @@ def fillexample():
 # Page: /about
 @app.route("/about", methods=["GET"])
 def about():
-    html = None
-    return render_template_string(html)
+    return render_template_string("src/html/equipe.html")
 
 
 # Page: /workspace
 @app.route("/workspace", methods=["GET"])
 def workspace():
-    # Minimal interactive page demonstrating fetch to API endpoints
-    html = None
-    return render_template_string(html)
+    return render_template_string("src/html/index.html")
 
 
 if __name__ == "__main__":
