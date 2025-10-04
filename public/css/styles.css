@@ -357,7 +357,7 @@ p {
     INTRODUCTION / COMPONENTS
     ========================================================================== */
 .introduction{
-
+    color: #101010;
 }
 
 /* ==========================================================================
@@ -391,6 +391,6 @@ p {
     border-radius: 100%;
 }
 
-.memebres .card_content{
-    color: #8C5DB1;
+.membres .card_content{
+    color: #101010;
 }
