@@ -357,14 +357,20 @@ p {
     INTRODUCTION / COMPONENTS
     ========================================================================== */
 .introduction{
-    color: #101010;
+    text-align: center;
+    background-color: var(--color-gray);
+    color: var(--color-white);
+
+    padding: var(--spacing-md);
 }
 
 /* ==========================================================================
     PREDICTIONS / COMPONENTS
     ========================================================================== */
 .membres{
+    background-color: var(--color-white);
     padding: var(--spacing-md) 0 var(--spacing-md);
+    text-align: center;
 }
 
 .membres .container{
@@ -381,8 +387,9 @@ p {
     justify-content: center;
     align-items: center;
     gap: var(--spacing-md);
+    border-bottom: solid 3px var(--color-primary-dark);
 
-    text-align: center;
+    padding-bottom: var(--spacing-sm);
 }
 
 .membres article img{
