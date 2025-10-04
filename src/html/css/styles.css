@@ -144,7 +144,7 @@ p {
     font-size: 36px;
 }
 
-.header .material-symbols-outlined{
+.header span{
     font-size: 48px;
 }
 
@@ -199,4 +199,77 @@ p {
     border-radius: 6px;
 
     padding: 10px 100px 10px 100px;
+}
+
+/* ==========================================================================
+    INFORMATION / COMPONENTS
+    ========================================================================== */
+.informations{
+    background-color: var(--color-gray);
+    color: var(--color-white);
+
+    padding: var(--spacing-md);
+}
+
+.informations .cards{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.informations .card_content{
+    border: solid 5px var(--color-primary);
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+/* ==========================================================================
+    NOUVELLE / COMPONENTS
+    ========================================================================== */
+.nouveau{
+    background: url(../assets/padding.jpg);
+}
+
+.nouveau .wrapper{
+    background-color: var(--color-white);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: var(--spacing-md) 0 var(--spacing-md);
+}
+
+.nouveau span{
+    color: var(--color-primary-dark);
+    font-size: 80px;
+    font-weight: 900;
+
+    background-color: white;
+    border: solid 2px var(--color-primary-dark);
+    border-radius: 5px;
+
+    padding: 50px;
+
+    &:hover{
+        color: var(--color-white);
+        background-color: var(--color-primary);
+        border: solid 2px var(--color-primary-dark);
+    }
+}
+
+/* ==========================================================================
+    FOOTER / COMPONENTS
+    ========================================================================== */
+.footer{
+    background-color: var(--color-black);
+
+    padding: var(--spacing-md);
 }
