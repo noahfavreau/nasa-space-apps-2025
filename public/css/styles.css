@@ -304,17 +304,15 @@ p {
     border-radius: 10px;
 }
 
-.data .button_container{
-    display: flex;
-    gap: var(--spacing-xs);
-    justify-content: center;
-}
-
 .data .btn{
     color: var(--color-primary);
     background-color: var(--color-primary-dark);
     border-radius: 6px;
     padding: 10px 30px 10px 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover{
         background-color: var(--color-primary);
@@ -349,4 +347,26 @@ p {
     max-width: 100%;
     max-height: 100%;
 }
-    
+
+/* ==========================================================================
+    INTRODUCTION / COMPONENTS
+    ========================================================================== */
+.introduction{
+
+}
+
+/* ==========================================================================
+    PREDICTIONS / COMPONENTS
+    ========================================================================== */
+.membres{
+
+}
+
+.membres .container{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.membres article{
+
+}
