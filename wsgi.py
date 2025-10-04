@@ -1,11 +1,9 @@
 import uuid
 from flask import Flask, jsonify, request, render_template_string
 import pandas as pd
+import shap
 
 app = Flask(__name__)
-
-
-# Apply the default theme
 
 
 # Example in-memory example data (replace with DB or real logic)
@@ -63,16 +61,7 @@ def fillexample():
 # Page: /about
 @app.route("/about", methods=["GET"])
 def about():
-    html = """
-    <!doctype html>
-    <html>
-      <head><title>About</title></head>
-      <body>
-        <h1>About</h1>
-        <p>Simple Flask app exposing prediction APIs and workspace page.</p>
-      </body>
-    </html>
-    """
+    html = None
     return render_template_string(html)
 
 
