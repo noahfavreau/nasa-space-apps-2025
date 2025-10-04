@@ -293,6 +293,11 @@ p {
     padding: var(--spacing-md) 0 var(--spacing-md);
 }
 
+.data .wrapper{
+    display: flex;
+    flex-direction: column;
+}
+
 .data .data_container{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -315,9 +320,7 @@ p {
     border-radius: 6px;
     padding: 10px 30px 10px 30px;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    align-self: center;
 
     &:hover{
         background-color: var(--color-primary);
