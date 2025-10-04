@@ -17,7 +17,12 @@ html {
 
 
 
-
+#svg1 {
+    width: 48px;
+    height: 100%;
+    max-width: 48px;
+    max-height: 48px;
+}
 
 
 
