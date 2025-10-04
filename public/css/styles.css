@@ -364,14 +364,33 @@ p {
     PREDICTIONS / COMPONENTS
     ========================================================================== */
 .membres{
-
+    padding: var(--spacing-md) 0 var(--spacing-md);
 }
 
 .membres .container{
     display: grid;
     grid-template-columns: 1fr 1fr;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-lg);
 }
 
 .membres article{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-md);
 
+    text-align: center;
+}
+
+.membres article img{
+    width: 150px;
+    height: 150px;
+    border-radius: 100%;
+}
+
+.memebres .card_content{
+    color: #8C5DB1;
 }
