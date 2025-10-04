@@ -57,7 +57,7 @@ html {
     --font-primary: "Poppins", sans-serif;
     --font-secondary: "Nunito", sans-serif;
     --font-size-content: 20px;
-    --font-size-h1: 48px;
+    --font-size-h1: 4.5em;
     --font-size-h2: 36px;
     --font-size-h3: 24px;
 }
@@ -142,7 +142,7 @@ p {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1rem 2rem;
+    padding: 1rem 0rem;
 }
 
 .header .logo{
@@ -162,6 +162,8 @@ p {
 }
 
 .header a{
+    font-size: 1.4em;
+    font-weight: 600;
     color: var(--color-white);
 }
 
@@ -195,7 +197,7 @@ p {
     border-radius: 10px;
     max-width: 600px;
 
-    padding: 40px 30px 40px 30px;
+    padding: 40px 0px 40px 0px;
 
     display: flex;
     flex-direction: column;
@@ -203,17 +205,22 @@ p {
     gap: var(--spacing-md);
 }
 
+.media_content .description{
+    font-size: 1.4em;
+    line-height: 1.4;
+}
+
 .hero img{
-    max-height: 500px;
-    max-width: 500px;
+    max-height: 575px;
+    max-width: 575px;
 }
 
 .hero .btn{
-    background-color: var(--color-primary-dark);
+    background-color: #5b3a74;
+    font-size: 1.4em;
     color: var(--color-white);
-    border-radius: 6px;
-
-    padding: 10px 100px 10px 100px;
+    border-radius: 20px;
+    padding: 20px 40px;
 }
 
 /* ==========================================================================
