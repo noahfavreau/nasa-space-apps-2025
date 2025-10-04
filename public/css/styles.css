@@ -1,0 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* ==========================================================================
+   RESET / GENERIC
+   ========================================================================== */
+
+html {
+    box-sizing: border-box;
+}
+
+*,
+*:before,
+*:after {
+    box-sizing: inherit;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ==========================================================================
+   COLORS / SETTINGS
+   ========================================================================== */
+:root {
+    --color-white: #E7EFFA;
+    --color-gray: #777579;
+    --color-black: #101010;
+    --color-primary: #E2C1E5;
+    --color-primary-dark: #8C5DB1;
+    --color-secondary: #F0DC6A;
+}
+  
+/* ==========================================================================
+    DIMENSIONS / SETTINGS
+    ========================================================================== */
+:root {
+    --spacing-xs: 5px;
+    --spacing-sm: 20px;
+    --spacing-md: 30px;
+    --spacing-lg: 50px;
+    --spacing-xl: 100px;
+}
+  
+/* ==========================================================================
+    FONTS / SETTINGS
+    ========================================================================== */
+:root {
+    --font-primary: "Poppins", sans-serif;
+    --font-secondary: "Nunito", sans-serif;
+    --font-size-content: 24px;
+    --font-size-h1: 48px;
+    --font-size-h2: 36px;
+    --font-size-h3: 24px;
+}
+  
+
+
+
+
+
+
+
+/* ==========================================================================
+   LINKS / ELEMENTS
+   Style de base de tous les liens et bouton du site
+   ========================================================================== */
+a {
+    font-family: var(--font-primary);
+    color: var(--color-black);
+    text-decoration: none;
+
+    &:hover {
+        color: var(--color-primary);
+        text-decoration: none;
+    }
+}
+  
+/* ==========================================================================
+    TYPOGRAPHY / ELEMENT
+    ========================================================================== */
+h1,
+h2,
+h3 {
+    font-family: var(--font-primary);
+    line-height: 1;
+    font-weight: bold;
+    margin: 0;
+}
+  
+h1 {
+    font-size: var(--font-size-h1);
+    margin: 0;
+    color: var(--color-white);
+}
+  
+h2 {
+    font-size: var(--font-size-h2);
+    padding: 5px 0 30px;
+}
+  
+h3 {
+    font-size: var(--font-size-h3);
+}
+  
+p {
+    font-family: var(--font-primary);
+    margin: 0;
+}
+  
+/* ==========================================================================
+    WRAPPER / ELEMENT
+    ========================================================================== */
+.wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ==========================================================================
+    HEADER / COMPONENTS
+    ========================================================================== */
+.header{
+    background-color: var(--color-black);
+    color: var(--color-white);
+
+    padding: var(--spacing-md) 0 var(--spacing-md);
+}
+
+.header .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header .logo{
+    display: flex;
+    align-items: center;
+    font-size: 36px;
+}
+
+.header span{
+    font-size: 48px;
+}
+
+.header ul{
+    display: flex;
+    gap: var(--spacing-md);
+    list-style-type: none;
+}
+
+.header a{
+    color: var(--color-white);
+}
+
+/* ==========================================================================
+    HERO / COMPONENTS
+    ========================================================================== */
+.hero{
+    background: url(../assets/space_background.jpg) center/cover no-repeat;
+    height: 100vh;
+    width: 100vw;
+    color: var(--color-white);
+}
+
+.hero .wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.hero .media_content{
+    background-color: rgba(240, 220, 106, 0.5);
+    border-radius: 10px;
+    max-width: 600px;
+
+    padding: 40px 30px 40px 30px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.hero img{
+    height: 500px;
+    width: 500px;
+}
+
+.hero .btn{
+    background-color: var(--color-primary-dark);
+    color: var(--color-white);
+    border-radius: 6px;
+
+    padding: 10px 100px 10px 100px;
+}
+
+/* ==========================================================================
+    INFORMATION / COMPONENTS
+    ========================================================================== */
+.informations{
+    background-color: var(--color-gray);
+    color: var(--color-white);
+
+    padding: var(--spacing-md);
+}
+
+.informations .cards{
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.informations .card_content{
+    border: solid 5px var(--color-primary);
+    border-radius: 10px;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+}
+
+/* ==========================================================================
+    NOUVELLE / COMPONENTS
+    ========================================================================== */
+.nouveau{
+    background: url(../assets/padding.jpg);
+}
+
+.nouveau .wrapper{
+    background-color: var(--color-white);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    padding: var(--spacing-md) 0 var(--spacing-md);
+}
+
+.nouveau span{
+    color: var(--color-primary-dark);
+    font-size: 80px;
+    font-weight: 900;
+
+    background-color: white;
+    border: solid 2px var(--color-primary-dark);
+    border-radius: 5px;
+
+    padding: 50px;
+
+    &:hover{
+        color: var(--color-white);
+        background-color: var(--color-primary);
+        border: solid 2px var(--color-primary-dark);
+    }
+}
+
+/* ==========================================================================
+    FOOTER / COMPONENTS
+    ========================================================================== */
+.footer{
+    background-color: var(--color-black);
+
+    padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+    DATA / COMPONENTS
+    ========================================================================== */
+.data{
+    background-color: var(--color-white);
+}
+
+/* ==========================================================================
+    PREDICTIONS / COMPONENTS
+    ========================================================================== */
+.prediction{
+    background-color: var(--color-white);
+
+    
+}
+    
