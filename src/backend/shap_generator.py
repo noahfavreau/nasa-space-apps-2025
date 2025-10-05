@@ -155,55 +155,40 @@ def _generate_shap_values(model, X_inf):
     
     # Handle different SHAP output formats
     if isinstance(shap_values, list):
-        # Multi-class model (older format) - list of arrays, one per class
+        # Multi-class model (older format)
         num_classes = len(shap_values)
-        
-        # Get SHAP values for each predicted class
         shap_values_for_predictions = []
         for i, predicted_class in enumerate(predictions):
             shap_values_instance = shap_values[predicted_class][i]
             shap_values_for_predictions.append(shap_values_instance.tolist())
-        
-        # Calculate overall feature importance across all predictions
         all_shap_values = np.vstack([shap_values[pred_class][i] for i, pred_class in enumerate(predictions)])
         feature_importance = np.abs(all_shap_values).mean(axis=0)
-        
         expected_values = [float(explainer.expected_value[pred_class]) for pred_class in predictions]
         
-    elif shap_values.ndim == 3:
-        # Multi-class model (newer format) - shape (n_samples, n_features, n_classes)
+    elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
+        # Multi-class model (newer format)
         num_classes = shap_values.shape[2]
-        
-        # Get SHAP values for each predicted class
         shap_values_for_predictions = []
         for i, predicted_class in enumerate(predictions):
-            # Extract SHAP values for this instance and its predicted class
             shap_values_instance = shap_values[i, :, predicted_class]
             shap_values_for_predictions.append(shap_values_instance.tolist())
-        
-        # Calculate overall feature importance across all predictions and classes
-        # Take mean absolute value across samples and classes
         feature_importance = np.abs(shap_values).mean(axis=(0, 2))
-        
         expected_values = [float(explainer.expected_value[pred_class]) for pred_class in predictions]
         
     else:
-        # Binary classification model - shape (n_samples, n_features)
+        # Binary classification
         num_classes = 2
-        
-        # For binary classification, SHAP values are for the positive class
-        shap_values_for_predictions = []
-        for i in range(len(predictions)):
-            shap_values_for_predictions.append(shap_values[i].tolist())
-        
-        # Feature importance is just the absolute mean of SHAP values
+        shap_values_for_predictions = [shap_values[i].tolist() for i in range(len(predictions))]
         feature_importance = np.abs(shap_values).mean(axis=0)
-        
-        # For binary classification, expected_value might be a scalar or list
         if isinstance(explainer.expected_value, (list, np.ndarray)):
             expected_values = [float(explainer.expected_value[0])] * len(predictions)
         else:
             expected_values = [float(explainer.expected_value)] * len(predictions)
+    
+    # --- NEW: Normalize feature importance to percentage ---
+    total_importance = np.sum(feature_importance)
+    if total_importance != 0:
+        feature_importance = 100 * feature_importance / total_importance
     
     return {
         "shap_values": shap_values_for_predictions,
@@ -270,21 +255,8 @@ def generate_shap_values(model, X_inf):
 
 def generate_shap_plot(model, X_inf, plot_type="summary"):
     """
-    Generate SHAP visualization plots.
-    
-    Parameters:
-    -----------
-    model : sklearn model
-        Trained classification model (binary or multi-class)
-    X_inf : pd.DataFrame
-        Input features
-    plot_type : str
-        Type of plot ("summary", "waterfall")
-        
-    Returns:
-    --------
-    str
-        Base64 encoded string of the plot image
+    Generate SHAP visualization plots (beeswarm for summary, waterfall for single instance).
+    Returns base64-encoded PNG.
     """
     try:
         if not SHAP_AVAILABLE:
@@ -292,85 +264,76 @@ def generate_shap_plot(model, X_inf, plot_type="summary"):
         
         # Get model predictions
         predictions = model.predict(X_inf)
-        
         explainer = shap.TreeExplainer(model)
         shap_values = explainer.shap_values(X_inf)
         
         plt.figure(figsize=(12, 8))
         
+        # --- Summary (Beeswarm) ---
         if plot_type == "summary":
             if isinstance(shap_values, list):
-                # Multi-class model (older format)
+                # Multi-class (older format)
                 most_common_class = max(set(predictions), key=list(predictions).count)
-                shap.summary_plot(shap_values[most_common_class], X_inf, show=False)
-                plt.title(f"SHAP Summary - Most Common Predicted Class: {most_common_class}")
-            elif shap_values.ndim == 3:
-                # Multi-class model (newer format) - use all classes
-                # For visualization, we can use the SHAP values for the most common predicted class
+                class_shap = shap_values[most_common_class]
+            elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
                 most_common_class = max(set(predictions), key=list(predictions).count)
-                class_shap_values = shap_values[:, :, most_common_class]
-                shap.summary_plot(class_shap_values, X_inf, show=False)
-                plt.title(f"SHAP Summary - Most Common Predicted Class: {most_common_class}")
+                class_shap = shap_values[:, :, most_common_class]
             else:
-                # Binary classification model
-                shap.summary_plot(shap_values, X_inf, show=False)
-                plt.title("SHAP Summary - Feature Importance")
-                
-        elif plot_type == "waterfall" and len(X_inf) > 0:
-            if isinstance(shap_values, list):
-                # Multi-class model (older format)
-                predicted_class = predictions[0]
-                shap.waterfall_plot(
-                    explainer.expected_value[predicted_class], 
-                    shap_values[predicted_class][0], 
-                    X_inf.iloc[0], 
-                    show=False
-                )
-                plt.title(f"SHAP Waterfall - Instance 0, Predicted Class: {predicted_class}")
-            elif shap_values.ndim == 3:
-                # Multi-class model (newer format)
-                predicted_class = predictions[0]
-                expected_val = explainer.expected_value[predicted_class]
-                instance_shap_values = shap_values[0, :, predicted_class]
-                
-                shap.waterfall_plot(
-                    expected_val,
-                    instance_shap_values, 
-                    X_inf.iloc[0], 
-                    show=False
-                )
-                plt.title(f"SHAP Waterfall - Instance 0, Predicted Class: {predicted_class}")
+                class_shap = shap_values
+
+            # Beeswarm only works with multiple samples
+            if X_inf.shape[0] > 1:
+                shap.summary_plot(class_shap, X_inf, show=False, plot_type="dot")
+                plt.title(f"SHAP Beeswarm - Most Common Predicted Class: {most_common_class}")
             else:
-                # Binary classification model
+                # Fallback to waterfall for single sample
                 expected_val = explainer.expected_value
                 if isinstance(expected_val, (list, np.ndarray)):
                     expected_val = expected_val[0]
-                
+                shap.waterfall_plot(expected_val, class_shap[0], X_inf.iloc[0], show=False)
+                plt.title("SHAP Waterfall - Single Instance")
+
+        # --- Waterfall (single instance only) ---
+        elif plot_type == "waterfall":
+            if isinstance(shap_values, list):
+                predicted_class = predictions[0]
                 shap.waterfall_plot(
-                    expected_val,
-                    shap_values[0], 
-                    X_inf.iloc[0], 
+                    explainer.expected_value[predicted_class],
+                    shap_values[predicted_class][0],
+                    X_inf.iloc[0],
                     show=False
                 )
-                plt.title(f"SHAP Waterfall - Instance 0, Predicted: {predictions[0]}")
-            
+            elif hasattr(shap_values, "ndim") and shap_values.ndim == 3:
+                predicted_class = predictions[0]
+                expected_val = explainer.expected_value[predicted_class]
+                shap.waterfall_plot(
+                    expected_val,
+                    shap_values[0, :, predicted_class],
+                    X_inf.iloc[0],
+                    show=False
+                )
+            else:
+                expected_val = explainer.expected_value
+                if isinstance(expected_val, (list, np.ndarray)):
+                    expected_val = expected_val[0]
+                shap.waterfall_plot(expected_val, shap_values[0], X_inf.iloc[0], show=False)
+            plt.title(f"SHAP Waterfall - Instance 0, Predicted: {predictions[0]}")
+        
         else:
             raise ValueError(f"Unsupported plot type: {plot_type}")
         
-        # Convert plot to base64 string
+        # Encode to base64
         buffer = io.BytesIO()
-        plt.savefig(buffer, format='png', bbox_inches='tight', dpi=150)
+        plt.savefig(buffer, format="png", bbox_inches="tight", dpi=150)
         buffer.seek(0)
         plot_base64 = base64.b64encode(buffer.getvalue()).decode()
-        
-        plt.close()  # Clean up
+        plt.close()
         buffer.close()
         
         return plot_base64
-        
+    
     except Exception as e:
-        plt.close()  # Ensure cleanup on error
-        raise Exception(f"Error generating SHAP plot: {str(e)}")
+        plt.close()
         raise Exception(f"Error generating SHAP plot: {str(e)}")
 
 def check_shap_availability():
