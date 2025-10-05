@@ -904,7 +904,12 @@
     elements.runButton.addEventListener('click', async () => {
       // Provide immediate user feedback
       elements.runButton.disabled = true;
-      elements.runButton.textContent = 'Processing...';
+      
+      // Show loading animation
+      const buttonText = elements.runButton.querySelector('.button-text');
+      const loadingSpinner = elements.runButton.querySelector('.loading-spinner');
+      if (buttonText) buttonText.style.display = 'none';
+      if (loadingSpinner) loadingSpinner.style.display = 'flex';
       
       try {
         const summary = [];
@@ -1022,7 +1027,12 @@
       } finally {
         // Reset button
         elements.runButton.disabled = false;
-        elements.runButton.textContent = 'Run classification';
+        
+        // Hide loading animation
+        const buttonText = elements.runButton.querySelector('.button-text');
+        const loadingSpinner = elements.runButton.querySelector('.loading-spinner');
+        if (buttonText) buttonText.style.display = 'block';
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
       }
     });
   }
@@ -1674,39 +1684,16 @@
     if (successfulResults.length > 0) {
       pushLog(state, elements.outputLog, `📊 Prediction Results (${successfulResults.length} successful):`);
       
+      // Display the first successful result in the UI
+      const firstResult = successfulResults[0];
+      if (firstResult.data) {
+        displayPredictionCard(firstResult.data, elements);
+      }
+      
       successfulResults.forEach((result, index) => {
         if (result.data) {
-          // The backend returns the prediction result directly
-          // It could be a single value or an array, depending on the backend implementation
-          let prediction = result.data;
-          
-          // Handle different response formats
-          if (Array.isArray(prediction)) {
-            prediction = prediction[0]; // Take first prediction if array
-          }
-          
-          // Convert to number if it's a string
-          if (typeof prediction === 'string') {
-            prediction = parseFloat(prediction);
-          }
-          
-          if (!isNaN(prediction)) {
-            const confidence = (prediction * 100).toFixed(1);
-            let classification = 'Unknown';
-            
-            // Map prediction to classification
-            if (prediction >= 0.7) {
-              classification = 'Confirmed Planet';
-            } else if (prediction >= 0.3) {
-              classification = 'Planet Candidate';
-            } else {
-              classification = 'False Positive';
-            }
-            
-            pushLog(state, elements.outputLog, `  ${index + 1}. ${classification} (${confidence}% confidence)`);
-          } else {
-            pushLog(state, elements.outputLog, `  ${index + 1}. Prediction value: ${result.data}`);
-          }
+          // Log the result for debugging
+          pushLog(state, elements.outputLog, `  ${index + 1}. ${result.data.predicted_label} (${(result.data.confidence * 100).toFixed(1)}% confidence)`);
         }
       });
     }
@@ -1719,34 +1706,137 @@
     }
   }
 
-  function displaySHAPResults(shapData, elements, state) {
-    if (!shapData) {
-      pushLog(state, elements.outputLog, '⚠ No SHAP data to display');
-      return;
+  // Display prediction results in the UI card
+  function displayPredictionCard(predictionData, elements) {
+    const resultsPanel = document.getElementById('prediction-results-panel');
+    if (!resultsPanel) return;
+
+    // Show the results panel
+    resultsPanel.style.display = 'block';
+
+    // Update prediction label
+    const predictionLabel = resultsPanel.querySelector('.prediction-label');
+    if (predictionLabel) {
+      predictionLabel.textContent = predictionData.predicted_label || 'Exoplanet Classification';
     }
 
-    if (shapData.feature_importance && Array.isArray(shapData.feature_importance)) {
-      pushLog(state, elements.outputLog, '🔍 Top feature importance:');
-      
-      // Get top 5 most important features
-      const features = shapData.feature_names || [];
-      const importance = shapData.feature_importance || [];
-      
-      const featureImportance = features.map((name, index) => ({
-        name,
-        importance: importance[index] || 0
-      })).sort((a, b) => b.importance - a.importance).slice(0, 5);
+    // Update confidence score
+    const confidenceValue = resultsPanel.querySelector('.confidence-value');
+    if (confidenceValue && predictionData.confidence) {
+      confidenceValue.textContent = `${(predictionData.confidence * 100).toFixed(1)}%`;
+    }
 
-      featureImportance.forEach((feature, index) => {
-        const importance = (feature.importance * 100).toFixed(1);
-        pushLog(state, elements.outputLog, `  ${index + 1}. ${feature.name}: ${importance}%`);
-      });
+    // Update probability bars
+    if (predictionData.probabilities) {
+      const probabilities = predictionData.probabilities;
+      
+      // Exoplanet probability
+      const exoplanetBar = resultsPanel.querySelector('.exoplanet-bar');
+      const exoplanetValue = resultsPanel.querySelector('.exoplanet-bar').parentElement.querySelector('.probability-value');
+      if (exoplanetBar && probabilities.Exoplanet !== undefined) {
+        const percentage = (probabilities.Exoplanet * 100).toFixed(1);
+        exoplanetBar.style.width = `${percentage}%`;
+        exoplanetValue.textContent = `${percentage}%`;
+      }
+
+      // Uncertain probability
+      const uncertainBar = resultsPanel.querySelector('.uncertain-bar');
+      const uncertainValue = resultsPanel.querySelector('.uncertain-bar').parentElement.querySelector('.probability-value');
+      if (uncertainBar && probabilities.Uncertain !== undefined) {
+        const percentage = (probabilities.Uncertain * 100).toFixed(1);
+        uncertainBar.style.width = `${percentage}%`;
+        uncertainValue.textContent = `${percentage}%`;
+      }
+
+      // Not Exoplanet probability
+      const notExoplanetBar = resultsPanel.querySelector('.not-exoplanet-bar');
+      const notExoplanetValue = resultsPanel.querySelector('.not-exoplanet-bar').parentElement.querySelector('.probability-value');
+      if (notExoplanetBar && probabilities['Not Exoplanet'] !== undefined) {
+        const percentage = (probabilities['Not Exoplanet'] * 100).toFixed(1);
+        notExoplanetBar.style.width = `${percentage}%`;
+        notExoplanetValue.textContent = `${percentage}%`;
+      }
+    }
+
+    // Scroll to results
+    resultsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function displaySHAPResults(shapData, elements, state) {
+    const shapPanel = document.getElementById('shap-results-panel');
+    if (!shapPanel) return;
+
+    // Show the SHAP panel
+    shapPanel.style.display = 'block';
+
+    // Update SHAP summary
+    const shapSummary = document.getElementById('shap-summary');
+    if (shapSummary) {
+      if (shapData.success) {
+        shapSummary.innerHTML = `
+          <div style="text-align: center;">
+            <h4 style="color: var(--color-primary); margin-bottom: 8px;">SHAP Analysis Complete</h4>
+            <p style="color: var(--color-white); margin: 0;">Feature importance analysis generated successfully</p>
+          </div>
+        `;
+      } else {
+        shapSummary.innerHTML = `
+          <div style="text-align: center;">
+            <p style="color: var(--color-warning); margin: 0;">${shapData.error || 'SHAP analysis not available'}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Display feature importance if available
+    if (shapData.success && shapData.feature_importance) {
+      displayFeatureImportance(shapData, elements);
+    }
+
+    // Log to console for debugging
+    if (shapData.feature_importance && Array.isArray(shapData.feature_importance)) {
+      pushLog(state, elements.outputLog, '🔍 SHAP feature importance analysis completed');
+    } else {
+      pushLog(state, elements.outputLog, '⚠ SHAP feature importance data not available');
     }
 
     if (shapData.plots && shapData.plots.summary_plot) {
       pushLog(state, elements.outputLog, '📈 SHAP visualization generated (check browser console for base64 data)');
       console.log('SHAP Summary Plot (base64):', shapData.plots.summary_plot);
     }
+
+    // Scroll to SHAP results
+    shapPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Display feature importance
+  function displayFeatureImportance(shapData, elements) {
+    const importanceList = document.getElementById('importance-list');
+    if (!importanceList || !shapData.feature_names || !shapData.feature_importance) return;
+
+    // Clear existing content
+    importanceList.innerHTML = '';
+
+    // Create feature importance items
+    const features = shapData.feature_names;
+    const importance = shapData.feature_importance;
+
+    // Create array of feature-importance pairs and sort by importance
+    const featureImportancePairs = features.map((feature, index) => ({
+      feature: feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      importance: importance[index]
+    })).sort((a, b) => b.importance - a.importance);
+
+    // Display top features
+    featureImportancePairs.slice(0, 10).forEach((item, index) => {
+      const importanceItem = document.createElement('div');
+      importanceItem.className = 'importance-item';
+      importanceItem.innerHTML = `
+        <span class="feature-name">${item.feature}</span>
+        <span class="importance-value">${(item.importance * 100).toFixed(1)}%</span>
+      `;
+      importanceList.appendChild(importanceItem);
+    });
   }
 
   // Check backend status on page load
