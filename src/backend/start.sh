@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 cd /home/serge/prog/nasa-space-apps-2025/src/backend
+rm /run/gunicorn.pid
 git stash
 git stash drop
 git pull

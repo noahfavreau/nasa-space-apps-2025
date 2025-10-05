@@ -2,10 +2,13 @@
 Description=Gunicorn in the backend 
 After = network.target 
 After=nginx.service
+
 [Service]
+PIDFile=/run/gunicorn.pid
 Type=simple
 ExecStart=/home/serge/prog/nasa-space-apps-2025/src/backend/start.sh
-ExecStop=/usr/bin/pkill -f python3
+ExecReload=/usr
+ExecStop=/bin/kill -s TERM $MANPID
 Restart=always
 RestartSec=1
 
