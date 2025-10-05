@@ -7,6 +7,8 @@ from shap_generator import generate_shap_analysis  # from src/backend/shap_gener
 
 app = Flask(__name__, template_folder="src/html")
 
+model = inference.load_classifier("../model")
+
 
 @app.route("/", methods=["GET"])
 def main_route():
@@ -15,16 +17,32 @@ def main_route():
 
 # API: /api/prediction/preditiondata
 @app.route("/api/prediction/preditiondata", methods=["GET", "POST"])
-def preditiondata(data: Request):  # name follows route; fix typo if desired
+def preditiondata():  # name follows route; fix typo if desired
+    global model
     """
     GET: return recent prediction data
     POST: accept JSON payload and return stored/echoed prediction result
     """
+    data = request.get_json(silent=True)
+    if data is None:
+        return jsonify({"error": "Invalid or missing JSON"}), 400
+    for i in [
+        "orbital_period",
+        "stellar_radius",
+        "rate_of_ascension",
+        "declination",
+        "transit_duration",
+        "transit_depth",
+        "planet_radius",
+        "planet_temperature",
+        "insolation_flux",
+        "stellar_temperature",
+    ]:
+        if i not in data:
+            return jsonify({"error": "Missing data in JSON"}), 400
 
-    request.files.get("csv_file")
     # processing vient ici
-
-    return jsonify({"examples": {}}), 200
+    return jsonify(model.predict_from_raw_features(list(data.values()))), 200
 
 
 # API: /api/prediction/graph
