@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
-/usr/bin/kill -s SIGINT $1
-/usr/bin/bash /home/serge/prog/nasa-space-apps-2025/src/backend/start.sh
+git fetch origin
+A= git log -1 --format=%ci origin/main
+Current= $(cat current.txt)
+if [$((A-current)) > 0]; then
+    systemctl restart gunicorn_backend.service
+    echo $A > current.txt
+fi
+
