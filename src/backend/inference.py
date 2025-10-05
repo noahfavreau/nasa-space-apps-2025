@@ -150,20 +150,26 @@ class ExoplanetClassifier:
         """
         all_predictions = []
         
-
         for model_type, models in self.base_models.items(): # run all base models on input
+            model_preds = []
             for model in models:
                 if model_type == 'lightgbm':
-                    # lightgbm booster
-                    pred = model.predict(X)
+                    # LightGBM booster
+                    best_iter = model.best_iteration or model.current_iteration()
+                    proba = model.predict(X, num_iteration=best_iter)
+                    pred = np.argmax(proba, axis=1)
                 elif model_type == 'tabnet':
-                    # tabnet
+                    # TabNet
                     pred = model.predict(X)
                 else:
-                    # catboost and xgboost
+                    # CatBoost and XGBoost
                     pred = model.predict(X)
                 
-                all_predictions.append(pred)
+                model_preds.append(pred)
+            
+            # Average predictions for this model type across folds
+            avg_pred = np.mean(model_preds, axis=0)
+            all_predictions.append(avg_pred)
         
         return np.column_stack(all_predictions)
     
@@ -184,28 +190,35 @@ class ExoplanetClassifier:
             
             for model in models:
                 if model_type == 'lightgbm':
-                    # lightgbm booster - get probabilities directly
-                    prob = model.predict(X, num_iteration=model.best_iteration, pred_leaf=False, pred_contrib=False)
-                    # LightGBM booster returns probabilities for multiclass
-                    if prob.ndim == 1:
-                        # Binary case, convert to 3-class
-                        prob = np.column_stack([1-prob, prob, np.zeros_like(prob)])
-                    # If already 3-class, use as is
+                    # LightGBM booster - get probabilities directly
+                    best_iter = model.best_iteration or model.current_iteration()
+                    prob = model.predict(X, num_iteration=best_iter)
+                    # LightGBM should already return 3-class probabilities for multiclass
                 elif model_type == 'tabnet':
-                    # tabnet
+                    # TabNet
                     prob = model.predict_proba(X)
                 else:
-                    # catboost and xgboost
+                    # CatBoost and XGBoost
                     prob = model.predict_proba(X)
-
+                
                 type_probs.append(prob)
             
-            # Average probabilities across all folds for this model type
+            # Average probabilities across all folds for this model type (same as dividing by n_folds)
             model_type_probabilities[model_type] = np.mean(type_probs, axis=0)
         
-        # Concatenate averaged probabilities from all model types
+        # Helper function to reshape for meta-model (same as in notebook)
+        def reshape_for_meta(array: np.ndarray) -> np.ndarray:
+            array = np.asarray(array)
+            if array.ndim == 1:
+                return array.reshape(-1, 1)
+            return array
+        
+        # Concatenate averaged probabilities from all model types in the same order as training
         # 4 model types × 3 classes = 12 features
-        return np.hstack([model_type_probabilities[model_type] for model_type in ['catboost', 'lightgbm', 'xgboost', 'tabnet']])
+        meta_features = np.hstack([reshape_for_meta(model_type_probabilities[model_type]) 
+                                  for model_type in ['catboost', 'lightgbm', 'xgboost', 'tabnet']])
+        
+        return meta_features
     
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
