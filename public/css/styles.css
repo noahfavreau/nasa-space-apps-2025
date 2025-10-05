@@ -175,6 +175,11 @@ p {
 .header a {
     font-size: 1.2em;
     color: var(--color-white);
+    transition: 0.3s;
+
+    &:hover{
+        color: var(--color-secondary);
+    }
 }
 
 #svg1 {
