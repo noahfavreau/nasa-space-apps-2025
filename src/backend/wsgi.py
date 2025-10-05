@@ -6,8 +6,8 @@ import inference
 from preprocess import preprocess_api_input  # from src/backend/preprocess.py
 from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
 from pathlib import Path
-from preprocess import preprocess_api_input 
-from shap_generator import generate_shap_analysis  
+from preprocess import preprocess_api_input
+from shap_generator import generate_shap_analysis
 from shap import Explainer
 
 
@@ -24,7 +24,7 @@ CORS(
 model = inference.load_classifier("../model")
 
 
-@app.route("/api/restart")
+@app.route("/api/restart", methods=["GET"])
 def restart():
     p = Path("/tmp/reboot.txt")
     p.touch(exist_ok=True)
@@ -101,9 +101,16 @@ def generate_shap_graph():
             data["insolation_flux"] = data.pop("insolation flux")
 
         required_fields = [
-            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
-            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
-            "insolation_flux", "stellar_temperature"
+            "orbital_period",
+            "stellar_radius",
+            "rate_of_ascension",
+            "declination",
+            "transit_duration",
+            "transit_depth",
+            "planet_radius",
+            "planet_temperature",
+            "insolation_flux",
+            "stellar_temperature",
         ]
 
         for field in required_fields:
@@ -113,7 +120,9 @@ def generate_shap_graph():
         X_inf = pd.DataFrame([data])
 
         if not hasattr(model, "generate_meta_features"):
-            return jsonify({"error": "Model does not support meta-feature generation"}), 500
+            return jsonify(
+                {"error": "Model does not support meta-feature generation"}
+            ), 500
 
         meta_features = model.generate_meta_features(X_inf)
 
@@ -128,10 +137,9 @@ def generate_shap_graph():
         return jsonify(shap_result), 200
 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"SHAP analysis failed: {str(e)}"
-        }), 500
+        return jsonify(
+            {"success": False, "error": f"SHAP analysis failed: {str(e)}"}
+        ), 500
 
 
 if __name__ == "__main__":
