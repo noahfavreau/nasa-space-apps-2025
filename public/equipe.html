@@ -17,7 +17,7 @@
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 </head>
 
-<body>
+<body class="team-page">
     <header class="header">
         <div class="wrapper">
             <a href="index.html" class="logo">
@@ -26,95 +26,83 @@
 
             <nav>
                 <ul>
-                    <li><a href="equipe.html">Team</a></li>
                     <li><a href="prediction.html">Prediction</a></li>
-                    <li><a
-                            href="https://www.spaceappschallenge.org/2025/challenges/a-world-away-hunting-for-exoplanets-with-ai/?tab=details">Hackaton</a>
-                    </li>
+                    <li><a href="equipe.html" aria-current="page">Team</a></li>
+                    <li><a href="architecture.html">Architecture</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-
-    <!-- ------------------------------------------ Section information ------------------------------------------ -->
-
-    <section class="introduction">
-        <div class="wrapper">
-            <h2>Who we are</h2>
-            <p></p>
-        </div>
-    </section>
-
-    <!-- ------------------------------------------ Section information ------------------------------------------ -->
-
-    <section class="membres">
-        <div class="wrapper">
-            <h2> Meet the Team </h2>
-
-            <!-- -------------- Noah -------------- -->
-
-            <div class="container">
-                <article>
-                    <div class="card_media">
-                        <img src="assets/noah.png" alt="">
-                    </div>
-                    <div class="card_content">
-                        <h3>Noah Favreau</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed
-                            curabitur eget quis.</p>
-                    </div>
-                </article>
-
-                <!-- -------------- Louis -------------- -->
-
-                <article>
-                    <div class="card_media">
-                        <img src="assets/louis.png" alt="">
-                    </div>
-                    <div class="card_content">
-                        <h3>Louis Turpault</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed
-                            curabitur eget quis.</p>
-                    </div>
-                </article>
-
-                <!-- -------------- Ilian -------------- -->
-
-                <article>
-                    <div class="card_media">
-                        <img src="assets/ilian.jpg" alt="">
-                    </div>
-                    <div class="card_content">
-                        <h3>Ilian Djorf</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed
-                            curabitur eget quis.</p>
-                    </div>
-                </article>
-
-                <!-- -------------- Alexia -------------- -->
-
-                <article>
-                    <div class="card_media">
-                        <img src="assets/alexia.jpg" alt="">
-                    </div>
-                    <div class="card_content">
-                        <h3>Alexia-Daniela Bocioacă</h3>
-                        <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed
-                            curabitur eget quis.</p>
-                    </div>
-                </article>
+    <main>
+        <section class="team-hero">
+            <div class="wrapper team-hero__wrapper">
+                <div class="team-hero__content">
+                    <p class="eyebrow">Meet the team</p>
+                    <h1>The minds behind EXOSCAN</h1>
+                    <p class="description">A passionate team of scientists, engineers, and developers dedicated to advancing exoplanet discovery through innovative machine learning approaches.</p>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- ------------------------------------------ Footer ------------------------------------------ -->
+        <section class="team-members">
+            <div class="wrapper team-members__wrapper">
+                <div class="section-heading">
+                    <h2>Our Team</h2>
+                    <p>Each member brings unique expertise in astronomy, data science, and space technology to make exoplanet detection more accessible and accurate.</p>
+                </div>
 
-    <footer class="footer">
-        <div class="wrapper">
+                <div class="team-grid">
+                    <article class="team-card">
+                        <div class="team-card__media">
+                            <img src="assets/noah.png" alt="Noah Favreau">
+                        </div>
+                        <div class="team-card__content">
+                            <h3>Noah Favreau</h3>
+                            <p class="team-card__role">Lorem Ipsum Role</p>
+                            <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed curabitur eget quis molestie facilisis.</p>
+                        </div>
+                    </article>
 
-        </div>
-    </footer>
+                    <article class="team-card">
+                        <div class="team-card__media">
+                            <img src="assets/louis.png" alt="Louis Turpault">
+                        </div>
+                        <div class="team-card__content">
+                            <h3>Louis Turpault</h3>
+                            <p class="team-card__role">Lorem Ipsum Role</p>
+                            <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed curabitur eget quis molestie facilisis.</p>
+                        </div>
+                    </article>
+
+                    <article class="team-card">
+                        <div class="team-card__media">
+                            <img src="assets/ilian.jpg" alt="Ilian Djorf">
+                        </div>
+                        <div class="team-card__content">
+                            <h3>Ilian Djorf</h3>
+                            <p class="team-card__role">Lorem Ipsum Role</p>
+                            <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed curabitur eget quis molestie facilisis.</p>
+                        </div>
+                    </article>
+
+                    <article class="team-card">
+                        <div class="team-card__media">
+                            <img src="assets/alexia.jpg" alt="Alexia-Daniela Bocioacă">
+                        </div>
+                        <div class="team-card__content">
+                            <h3>Alexia-Daniela Bocioacă</h3>
+                            <p class="team-card__role">Lorem Ipsum Role</p>
+                            <p>Lorem ipsum dolor sit amet consectetur. Faucibus mauris vitae odio amet. Diam fames sed curabitur eget quis molestie facilisis.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+    </main>
+
+    <script src="js/smooth-scroll.js"></script>
 </body>
 
 </html>

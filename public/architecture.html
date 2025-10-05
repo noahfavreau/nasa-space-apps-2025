@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/normalize.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&" />
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+
+    <title>EXOSCAN Architecture</title>
+</head>
+
+<body class="architecture-page">
+    <header class="header">
+        <div class="wrapper">
+            <a href="index.html" class="logo">
+                <img src="assets/favicon.svg" alt="spiral" id="logo_image"> EXOSCAN
+            </a>
+
+            <nav>
+                <ul>
+                    <li><a href="prediction.html">Prediction</a></li>
+                    <li><a href="equipe.html">Team</a></li>
+                    <li><a href="architecture.html" aria-current="page">Architecture</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="architecture-hero">
+            <div class="wrapper architecture-hero__wrapper">
+                <div class="architecture-hero__content">
+                    <p class="eyebrow">System Architecture</p>
+                    <h1>Advanced ML Pipeline for Exoplanet Detection</h1>
+                    <p class="description">A sophisticated stacking ensemble approach combining multiple machine learning algorithms with hyperparameter optimization to achieve state-of-the-art exoplanet classification accuracy.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="architecture-overview">
+            <div class="wrapper architecture-overview__wrapper">
+                <div class="section-heading">
+                    <h2>NASA Space Apps Challenge Solution</h2>
+                    <p>Our hackathon submission leverages real NASA datasets and cutting-edge machine learning to democratize exoplanet discovery. Built in 48 hours with production-ready architecture and comprehensive data processing pipeline.</p>
+                </div>
+
+                <div class="pipeline-flow">
+                    <article class="pipeline-stage">
+                        <div class="stage-number">01</div>
+                        <div class="stage-content">
+                            <h3>Multi-Source Data Acquisition</h3>
+                            <p>Automated download from NASA Exoplanet Archive (KOI, TOI datasets) and NASA K2 mission data via API calls. Real-time access to 21,000+ exoplanet candidates with comprehensive astronomical parameters.</p>
+                        </div>
+                    </article>
+
+                    <article class="pipeline-stage">
+                        <div class="stage-number">02</div>
+                        <div class="stage-content">
+                            <h3>Data Cleaning & Integration</h3>
+                            <p>Column-wise missing value analysis (40% threshold), automatic disposition mapping (CONFIRMED→1, CANDIDATE→2, FALSE POSITIVE→3), and intelligent column selection from 25+ astronomical features.</p>
+                            <div class="stage-reasoning">
+                                <h4>Data Quality Strategy</h4>
+                                <ul>
+                                    <li><strong>40% Missing Value Threshold:</strong> Research shows features with >40% missingness introduce more noise than signal. Empirical analysis of NASA archives confirms this cutoff preserves information while removing sparse columns.</li>
+                                    <li><strong>Multi-Mission Integration:</strong> Combines KOI (Kepler), TOI (TESS), and K2 datasets using standardized nomenclature, maximizing training diversity across different stellar populations and detection methods.</li>
+                                    <li><strong>Class Balance Preservation:</strong> Maintains natural distribution of confirmed planets (rare), candidates (moderate), and false positives (common) to reflect real discovery rates.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="pipeline-stage">
+                        <div class="stage-number">03</div>
+                        <div class="stage-content">
+                            <h3>Feature Engineering & Scaling</h3>
+                            <p>Log10 transformation for astronomical measurements, unit standardization (radius conversion to meters), robust scaling to handle outliers, and class-based KNN imputation (k=5) for missing values.</p>
+                            <div class="stage-reasoning">
+                                <h4>Scientific Data Preparation</h4>
+                                <ul>
+                                    <li><strong>Log10 Transformation:</strong> Astronomical quantities span orders of magnitude (planetary radii: Earth-size to Jupiter-size). Log scaling ensures linear algorithms can capture these power-law relationships effectively.</li>
+                                    <li><strong>Robust Scaling:</strong> Uses median/IQR instead of mean/std to handle extreme outliers common in sky surveys (bright giants vs faint dwarfs), preventing single objects from skewing distributions.</li>
+                                    <li><strong>Class-based KNN Imputation (k=5):</strong> Missing values filled using similar objects of the same class, preserving astrophysical correlations (stellar mass-radius relations, planet-star correlations).</li>
+                                    <li><strong>Unit Standardization:</strong> Converts mixed units (solar radii, Earth radii, AU) to SI units, ensuring consistent numerical ranges for optimization algorithms.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="pipeline-stage">
+                        <div class="stage-number">04</div>
+                        <div class="stage-content">
+                            <h3>Advanced ML Ensemble</h3>
+                            <p>Stacked ensemble with 4 specialized algorithms, Optuna hyperparameter optimization (30 trials each), 10-fold stratified cross-validation, and meta-learning for optimal weight combination.</p>
+                            <div class="stage-reasoning">
+                                <h4>Architectural Decision: Why Stacked Ensemble?</h4>
+                                <ul>
+                                    <li><strong>Bias-Variance Decomposition:</strong> Single models suffer from either high bias (underfitting complex exoplanet signals) or high variance (overfitting to noise). Stacking reduces both by combining diverse learners.</li>
+                                    <li><strong>Model Diversity Principle:</strong> Each algorithm captures different aspects: tree-based models excel at feature interactions, TabNet provides attention-based selection, ensuring complementary error patterns.</li>
+                                    <li><strong>Meta-Learning Advantage:</strong> Rather than simple averaging, a trained meta-model learns optimal weights based on input characteristics, adapting to different regions of the feature space.</li>
+                                    <li><strong>Astronomical Data Complexity:</strong> Exoplanet signals exhibit multi-scale patterns (orbital periods, transit depths, stellar noise) that no single algorithm can capture optimally.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="model-details">
+            <div class="wrapper model-details__wrapper">
+                <div class="section-heading">
+                    <h2>Model Components</h2>
+                    <p>Each base model brings unique strengths to exoplanet signal detection, creating a robust ensemble architecture.</p>
+                </div>
+
+                <div class="model-grid">
+                    <article class="model-card">
+                        <div class="model-icon">CB</div>
+                        <h3>CatBoost</h3>
+                        <p class="model-description">Gradient boosting with automatic categorical feature handling and reduced overfitting through ordered boosting.</p>
+                        <ul class="model-features">
+                            <li>Automatic feature scaling</li>
+                            <li>Robust to outliers</li>
+                            <li>Built-in regularization</li>
+                            <li>GPU acceleration</li>
+                        </ul>
+                        <div class="model-reasoning">
+                            <h4>Why CatBoost for Exoplanets?</h4>
+                            <p><strong>Ordered Boosting:</strong> Prevents target leakage common in astronomical datasets with temporal correlations. <strong>Categorical Handling:</strong> Native support for stellar classifications (spectral types, discovery methods) without encoding artifacts. <strong>Noise Robustness:</strong> Built-in gradient noise handling crucial for noisy photometric measurements.</p>
+                        </div>
+                    </article>
+
+                    <article class="model-card">
+                        <div class="model-icon">LGB</div>
+                        <h3>LightGBM</h3>
+                        <p class="model-description">Fast gradient boosting framework optimized for efficiency and accuracy with leaf-wise tree growth.</p>
+                        <ul class="model-features">
+                            <li>Memory efficient</li>
+                            <li>Fast training speed</li>
+                            <li>High accuracy</li>
+                            <li>Network parallelization</li>
+                        </ul>
+                        <div class="model-reasoning">
+                            <h4>Why LightGBM for Large-Scale Data?</h4>
+                            <p><strong>Leaf-wise Growth:</strong> Optimal for high-dimensional astronomical features (25+ parameters per candidate). <strong>Memory Efficiency:</strong> Essential for processing 21,000+ exoplanet candidates in real-time. <strong>Speed-Accuracy Balance:</strong> Enables rapid hyperparameter exploration while maintaining precision on subtle transit signals.</p>
+                        </div>
+                    </article>
+
+                    <article class="model-card">
+                        <div class="model-icon">XGB</div>
+                        <h3>XGBoost</h3>
+                        <p class="model-description">Optimized distributed gradient boosting library with advanced regularization and scalability features.</p>
+                        <ul class="model-features">
+                            <li>Advanced regularization</li>
+                            <li>Parallel processing</li>
+                            <li>Feature importance</li>
+                            <li>Cross-platform support</li>
+                        </ul>
+                        <div class="model-reasoning">
+                            <h4>Why XGBoost for Feature Selection?</h4>
+                            <p><strong>Regularization:</strong> L1/L2 penalties prevent overfitting to correlated astronomical measurements (stellar radius vs mass). <strong>Feature Importance:</strong> SHAP-compatible explanations crucial for scientific validation of discoveries. <strong>Sparsity Handling:</strong> Optimized for datasets with many missing values common in multi-mission archives.</p>
+                        </div>
+                    </article>
+
+                    <article class="model-card">
+                        <div class="model-icon">TN</div>
+                        <h3>TabNet</h3>
+                        <p class="model-description">Deep learning architecture specifically designed for tabular data with interpretable feature selection.</p>
+                        <ul class="model-features">
+                            <li>Attention mechanism</li>
+                            <li>Sequential decision making</li>
+                            <li>Feature importance</li>
+                            <li>End-to-end learning</li>
+                        </ul>
+                        <div class="model-reasoning">
+                            <h4>Why TabNet for Deep Pattern Recognition?</h4>
+                            <p><strong>Attention Mechanism:</strong> Automatically focuses on relevant features per candidate (orbital period for hot Jupiters, transit depth for rocky planets). <strong>Sequential Processing:</strong> Models temporal dependencies in multi-epoch observations. <strong>Interpretability:</strong> Provides feature masks showing which measurements drove each classification decision.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="technical-specs">
+            <div class="wrapper technical-specs__wrapper">
+                <div class="section-heading">
+                    <h2>Technical Specifications</h2>
+                    <p>Detailed implementation parameters and optimization strategies for reproducible results.</p>
+                </div>
+
+                <div class="specs-grid">
+                    <article class="spec-panel">
+                        <h3>Hyperparameter Optimization</h3>
+                        <div class="spec-content">
+                            <div class="spec-item">
+                                <span class="spec-label">Framework:</span>
+                                <span class="spec-value">Optuna TPE Sampler</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Trials per Model:</span>
+                                <span class="spec-value">30 iterations</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Optimization Metric:</span>
+                                <span class="spec-value">Cross-validation Accuracy</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Search Strategy:</span>
+                                <span class="spec-value">Bayesian Optimization</span>
+                            </div>
+                        </div>
+                        <div class="spec-reasoning">
+                            <h4>Optimization Strategy Rationale</h4>
+                            <p><strong>TPE Sampler Choice:</strong> Tree-structured Parzen Estimator outperforms random/grid search by modeling promising vs unpromising regions. <strong>30 Trial Budget:</strong> Empirically validated sweet spot - sufficient exploration without overfitting to validation noise. <strong>Bayesian Approach:</strong> Builds surrogate model of hyperparameter space, concentrating trials where improvement is most likely.</p>
+                        </div>
+                    </article>
+
+                    <article class="spec-panel">
+                        <h3>Cross-Validation Strategy</h3>
+                        <div class="spec-content">
+                            <div class="spec-item">
+                                <span class="spec-label">Method:</span>
+                                <span class="spec-value">Stratified K-Fold</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Base Training Folds:</span>
+                                <span class="spec-value">10-fold CV</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Optuna CV Folds:</span>
+                                <span class="spec-value">5-fold CV</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Random Seed:</span>
+                                <span class="spec-value">67 (reproducible)</span>
+                            </div>
+                        </div>
+                        <div class="spec-reasoning">
+                            <h4>Cross-Validation Design Rationale</h4>
+                            <p><strong>Stratified Splitting:</strong> Maintains class proportions in each fold, critical for imbalanced exoplanet data (confirmed planets are rare). <strong>10-fold for Training:</strong> Optimal bias-variance tradeoff for 21k samples, providing robust meta-learning features. <strong>5-fold for Optuna:</strong> Faster hyperparameter exploration while maintaining statistical validity. <strong>Fixed Seed 67:</strong> Ensures reproducible splits for scientific verification and result comparison.</p>
+                        </div>
+                    </article>
+
+                    <article class="spec-panel">
+                        <h3>Data Split Configuration</h3>
+                        <div class="spec-content">
+                            <div class="spec-item">
+                                <span class="spec-label">Training Set:</span>
+                                <span class="spec-value">80% stratified</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Test Set:</span>
+                                <span class="spec-value">20% holdout</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Class Weighting:</span>
+                                <span class="spec-value">Automatic balancing</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Validation:</span>
+                                <span class="spec-value">Out-of-fold predictions</span>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="spec-panel">
+                        <h3>Meta-Learning Ensemble</h3>
+                        <div class="spec-content">
+                            <div class="spec-item">
+                                <span class="spec-label">Meta-Model:</span>
+                                <span class="spec-value">Logistic Regression CV</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Input Features:</span>
+                                <span class="spec-value">Base model probabilities</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Regularization:</span>
+                                <span class="spec-value">Cross-validated L1/L2</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">Early Stopping:</span>
+                                <span class="spec-value">20 rounds patience</span>
+                            </div>
+                        </div>
+                        <div class="spec-reasoning">
+                            <h4>Meta-Learning Architecture</h4>
+                            <p><strong>Logistic Regression Choice:</strong> Linear meta-learner prevents overfitting to base model quirks while remaining interpretable for scientific analysis. <strong>Probability Features:</strong> Uses class probabilities rather than hard predictions, preserving uncertainty information crucial for discovery confidence. <strong>CV Regularization:</strong> Automatically selects optimal L1/L2 balance, enabling feature selection among base models. <strong>Early Stopping:</strong> 20-round patience prevents meta-overfitting while allowing convergence.</p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="performance-metrics">
+            <div class="wrapper performance-metrics__wrapper">
+                <div class="section-heading">
+                    <h2>Performance & Artifacts</h2>
+                    <p>Comprehensive model evaluation and output artifacts for deployment and analysis.</p>
+                </div>
+
+                <div class="metrics-grid">
+                    <article class="metric-card">
+                        <h3>Model Artifacts</h3>
+                        <ul class="artifact-list">
+                            <li><span class="artifact-type">Models:</span> Serialized base models (joblib)</li>
+                            <li><span class="artifact-type">Parameters:</span> Optimized hyperparameters (JSON)</li>
+                            <li><span class="artifact-type">Meta-model:</span> Ensemble weights and coefficients</li>
+                            <li><span class="artifact-type">Predictions:</span> Test set classifications (CSV)</li>
+                            <li><span class="artifact-type">Features:</span> Meta-learning feature matrices</li>
+                        </ul>
+                    </article>
+
+                    <article class="metric-card">
+                        <h3>Evaluation Metrics</h3>
+                        <ul class="artifact-list">
+                            <li><span class="artifact-type">Accuracy:</span> Primary optimization target</li>
+                            <li><span class="artifact-type">Precision:</span> Per-class detection precision</li>
+                            <li><span class="artifact-type">Recall:</span> Sensitivity for each category</li>
+                            <li><span class="artifact-type">F1-Score:</span> Harmonic mean performance</li>
+                            <li><span class="artifact-type">ROC-AUC:</span> Multi-class discrimination</li>
+                        </ul>
+                    </article>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/smooth-scroll.js"></script>
+    <script src="js/architecture.js"></script>
+</body>
+
+</html>
