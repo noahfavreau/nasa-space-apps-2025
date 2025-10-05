@@ -2,3 +2,4 @@ __pycache__/*
 .venv/*
 simple_report.pdf
 *.pyc
+.DS_Store
