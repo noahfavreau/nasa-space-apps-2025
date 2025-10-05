@@ -1,13 +1,13 @@
 [Unit]
 Description=Gunicorn in the backend 
-After=syslog.target network.target remote-fs.target nss-lookup.target
-
+After = network.target 
+After=nginx.service
 [Service]
 Type=simple
-ExecStart=/home/serge/prog/nasa-space-apps-2025/.venv/bin/gunicorn -w 4 -b 0.0.0.0:8080  wsgi:app --error-logfile error.log --access-logfile access.log --capture-output --log-level debug
-ExecReload=/usr/bin/pkill -f python3
-ExecStop=/bin/kill -s QUIT $MAINPID
-PrivateTmp=true
+ExecStart=/home/serge/prog/nasa-space-apps-2025/src/backend/start.sh
+ExecStop=/usr/bin/pkill -f python3
+Restart=always
+RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
