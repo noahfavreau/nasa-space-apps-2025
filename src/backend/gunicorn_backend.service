@@ -4,7 +4,9 @@ After = network.target
 After=nginx.service
 
 [Service]
-PIDFile=/run/gunicorn.pid
+User=serge
+Group=serge
+PIDFile=/home/serge/.gunicorn.pid
 Type=simple
 ExecStart=/home/serge/prog/nasa-space-apps-2025/src/backend/start.sh
 ExecReload=/home/serge/prog/nasa-space-apps-2025/src/backend/restart.sh $MANPID
