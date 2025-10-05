@@ -19,8 +19,8 @@ CORS(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
-    supports_credentials=True, 
-    allow_headers=["Content-Type", "Authorization"], 
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
     methods=["GET", "POST", "OPTIONS"],
 )
 
@@ -31,6 +31,7 @@ model = inference.load_classifier("../model")
 def restart():
     p = Path("/tmp/reboot.txt")
     p.touch(exist_ok=True)
+    return "Will reboot soon"
 
 
 @app.route("/", methods=["GET"])
@@ -137,6 +138,7 @@ def generate_shap_graph():
 
         # Run SHAP analysis on base model
         from shap_generator import generate_shap_analysis
+
         result = generate_shap_analysis(base_model, X_inf)
 
         return jsonify(result), 200
