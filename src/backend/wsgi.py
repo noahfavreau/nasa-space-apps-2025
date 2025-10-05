@@ -1,13 +1,11 @@
 import uuid
 from flask import Flask, Request, jsonify, request
-from flask_cors import CORS
 import pandas as pd
 import inference
 from preprocess import preprocess_api_input  # from src/backend/preprocess.py
 from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
 
 app = Flask(__name__, template_folder="src/html")
-CORS(app, origins=['https://www.bottomlessswag.tech', 'https://bottomlessswag.tech'])
 
 model = inference.load_classifier("../model")
 
