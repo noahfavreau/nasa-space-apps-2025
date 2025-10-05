@@ -77,6 +77,9 @@ def produce_pdf():
     #     startangle=90,
     # )
     d = Drawing()
+    d.width = 100
+    d.height = 100
+
     pie = Pie(angleRange=360)
     pie.data = df["Output"].tolist()
     pie.labels = [str(i) for i in df["Item"].tolist()]
