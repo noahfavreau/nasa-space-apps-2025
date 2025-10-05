@@ -1003,10 +1003,13 @@
         if (firstSuccess && predictionResults.length === 1) {
           pushLog(state, elements.outputLog, 'Generating SHAP explanation...');
           try {
-            const shapResult = await exoScanAPI.generateSHAPAnalysis(firstSuccess.data);
+            const rawData = dataToProcess[0];
+            const shapResult = await exoScanAPI.generateSHAPAnalysis(rawData);
             if (shapResult.success) {
               displaySHAPResults(shapResult.data, elements, state);
               pushLog(state, elements.outputLog, 'SHAP analysis completed');
+            } else {
+              pushLog(state, elements.outputLog, 'SHAP analysis not available: ' + (shapResult.error || 'Feature not implemented'));
             }
           } catch (shapError) {
             pushLog(state, elements.outputLog, 'SHAP analysis failed: ' + shapError.message);
