@@ -137,20 +137,38 @@ def generate_shap_graph():
         X_inf = pd.DataFrame([ordered_values], columns=required_fields)
 
         # --- FIX: Use a base model for SHAP, not the meta-model ---
-        # Example: Use first XGBoost fold
-        base_model = None
+        # For SHAP analysis, we'll use a base model since meta-model requires transformed features
+        # Use first available base model (prioritize XGBoost for better SHAP support)
+        shap_model = None
+        
+        # Try XGBoost first
         if hasattr(model, "base_models") and "xgboost" in model.base_models:
             base_models = model.base_models["xgboost"]
             if base_models and len(base_models) > 0:
-                base_model = base_models[0]
+                shap_model = base_models[0]
+                print("Using XGBoost base model for SHAP analysis")
+        
+        # Try CatBoost as fallback
+        elif hasattr(model, "base_models") and "catboost" in model.base_models:
+            base_models = model.base_models["catboost"]
+            if base_models and len(base_models) > 0:
+                shap_model = base_models[0]
+                print("Using CatBoost base model for SHAP analysis")
+        
+        # Try LightGBM as another fallback
+        elif hasattr(model, "base_models") and "lightgbm" in model.base_models:
+            base_models = model.base_models["lightgbm"]
+            if base_models and len(base_models) > 0:
+                shap_model = base_models[0]
+                print("Using LightGBM base model for SHAP analysis")
 
-        if base_model is None:
-            return jsonify({"error": "No base model available for SHAP analysis"}), 500
+        if shap_model is None:
+            return jsonify({"error": "No suitable base model available for SHAP analysis"}), 500
 
-        # Run SHAP analysis on base model
+        # Run SHAP analysis on selected model
         from shap_generator import generate_shap_analysis
 
-        result = generate_shap_analysis(base_model, X_inf)
+        result = generate_shap_analysis(shap_model, X_inf)
 
         return jsonify(result), 200
 
