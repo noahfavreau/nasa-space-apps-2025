@@ -75,7 +75,7 @@ class ExoplanetClassifier:
         self.feature_names = [
             'orbital_period', 'stellar_radius', 'rate_of_ascension', 'declination',
             'transit_duration', 'transit_depth', 'planet_radius', 'planet_temperature',
-            'stellar_temperature', 'insolation flux'
+            'insolation flux', 'stellar_temperature'
         ]
         
         print(f"Loaded {len(self.base_models)} base models and meta-model") # print information about the loaded models
@@ -300,7 +300,7 @@ class ExoplanetClassifier:
             raw_features: raw features in order:
                 [orbital_period, stellar_radius, rate_of_ascension, declination,
                  transit_duration, transit_depth, planet_radius, planet_temperature,
-                 stellar_temperature, insolation flux]
+                 insolation flux, stellar_temperature]
         Returns:
             Dictionary with prediction results
         """

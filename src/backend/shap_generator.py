@@ -81,6 +81,23 @@ def generate_shap_analysis(model, X_inf, include_plots=True):
         elif not isinstance(X_inf, pd.DataFrame):
             raise ValueError("Input must be DataFrame, dict, or list")
         
+        # Align columns with model feature order when available
+        expected_order = None
+        if hasattr(model, "feature_names_in_"):
+            expected_order = list(model.feature_names_in_)
+        elif hasattr(model, "feature_names") and getattr(model, "feature_names"):
+            expected_order = list(model.feature_names)
+        elif hasattr(model, "get_booster"):
+            booster = model.get_booster()
+            booster_feature_names = getattr(booster, "feature_names", None)
+            if booster_feature_names:
+                expected_order = list(booster_feature_names)
+
+        if expected_order:
+            missing = [name for name in expected_order if name not in X_inf.columns]
+            if not missing:
+                X_inf = X_inf[expected_order]
+
         # Validate input
         if X_inf.empty:
             return {

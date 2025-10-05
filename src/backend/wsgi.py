@@ -65,8 +65,8 @@ def preditiondata():
         "transit_depth",
         "planet_radius",
         "planet_temperature",
-        "stellar_temperature",
         "insolation flux",
+        "stellar_temperature",
     ]
     
     missing_fields = [field for field in required_fields if field not in data]
@@ -77,7 +77,8 @@ def preditiondata():
             "hint": "Use 'insolation_flux' (underscore) or 'insolation flux' (space)"
         }), 400
 
-    return jsonify(model.predict_from_raw_features(list(data.values()))), 200
+    ordered_values = [data[field] for field in required_fields]
+    return jsonify(model.predict_from_raw_features(ordered_values)), 200
 
 
 # API: /api/prediction/graph
@@ -120,8 +121,8 @@ def generate_shap_graph():
             "transit_depth",
             "planet_radius",
             "planet_temperature",
-            "stellar_temperature",
             "insolation flux",
+            "stellar_temperature",
         ]
 
         # Map "insolation_flux" to "insolation flux" if necessary for API compatibility
@@ -132,7 +133,8 @@ def generate_shap_graph():
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
-        X_inf = pd.DataFrame([data])
+        ordered_values = [data[field] for field in required_fields]
+        X_inf = pd.DataFrame([ordered_values], columns=required_fields)
 
         # --- FIX: Use a base model for SHAP, not the meta-model ---
         # Example: Use first XGBoost fold
