@@ -392,7 +392,7 @@ class ExoScanAPI {
 }
 
 // Create global instance
-const exoScanAPI = new ExoScanAPI();
+const exoScanAPI = new ExoScanAPI('https://api.bottomlessswag.tech');
 
 // Export for module usage if needed
 if (typeof module !== 'undefined' && module.exports) {
