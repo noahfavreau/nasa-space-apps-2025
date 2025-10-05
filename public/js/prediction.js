@@ -844,56 +844,54 @@
 
     elements.remoteLinkButton.addEventListener('click', async () => {
       elements.remoteLinkButton.disabled = true;
-      elements.remoteLinkButton.textContent = 'Connecting...';
+      elements.remoteLinkButton.textContent = 'Running Prediction...';
       
       try {
-        pushLog(state, elements.outputLog, 'Connecting to backend to make prediction...');
+        // Check if there's a selected card
+        if (!state.selectedId) {
+          throw new Error('No object selected. Please select an object from the library first.');
+        }
+
+        pushLog(state, elements.outputLog, 'Running prediction on selected object...');
         
-        // Sample exoplanet data for prediction
-        const sampleData = {
-          "orbital_period": 365.25,
-          "stellar_radius": 1.0,
-          "rate_of_ascension": 12.0,
-          "declination": 45.0,
-          "transit_duration": 0.1,
-          "transit_depth": 0.01,
-          "planet_radius": 1.0,
-          "planet_temperature": 288.0,
-          "insolation_flux": 1361.0,
-          "stellar_temperature": 5778.0
-        };
+        // Extract data from selected card
+        const apiData = extractCardDataForAPI(state.selectedId, state);
+        if (!apiData) {
+          throw new Error('Selected object has no valid data for prediction');
+        }
+
+        // Check if all required fields are present
+        const requiredFields = [
+          "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+          "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+          "insolation_flux", "stellar_temperature"
+        ];
         
-        const result = await exoScanAPI.predictSingle(sampleData);
+        const missingFields = requiredFields.filter(field => apiData[field] === null || apiData[field] === undefined);
+        if (missingFields.length > 0) {
+          throw new Error(`Missing required data: ${missingFields.join(', ')}`);
+        }
+
+        // Run prediction
+        const result = await exoScanAPI.predictSingle(apiData);
         
         if (result.success && result.data) {
-          // Create a new card with the prediction result
-          const predictionCard = {
-            id: buildObjectId(state.objectCounter + 1),
-            title: 'Remote Prediction',
-            subtitle: 'From backend API',
-            notes: 'Prediction made with sample data from backend',
-            features: sampleData,
-            prediction: result.data,
-            isTemplate: false
-          };
+          const cardTitle = state.cards.find(card => card.id === state.selectedId)?.title || state.selectedId;
+          pushLog(state, elements.outputLog, `✓ Prediction completed for ${cardTitle}`);
+          pushLog(state, elements.outputLog, `Prediction result: ${JSON.stringify(result.data)}`);
           
-          state.cards.push(predictionCard);
-          state.objectCounter++;
-          
-          renderObjectGrid(elements.objectGrid, state.cards, elements.cardTemplate);
-          saveStoredState(state);
-          
-          pushLog(state, elements.outputLog, '✓ Prediction completed successfully and added to library');
+          // Display the prediction results
+          displayPredictionResults([{ success: true, data: result.data }], elements, state);
         } else {
           throw new Error(result.error || 'Prediction failed');
         }
         
       } catch (error) {
-        pushLog(state, elements.outputLog, '❌ Failed to make prediction: ' + error.message);
-        console.error('Remote link error:', error);
+        pushLog(state, elements.outputLog, '❌ Prediction failed: ' + error.message);
+        console.error('Prediction error:', error);
       } finally {
         elements.remoteLinkButton.disabled = false;
-        elements.remoteLinkButton.textContent = 'Make Prediction';
+        elements.remoteLinkButton.textContent = 'Run Prediction';
       }
     });
   }
