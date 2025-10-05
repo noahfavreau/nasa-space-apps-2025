@@ -1,7 +1,7 @@
 import uuid
 from flask import Flask, Request, jsonify, request
 import pandas as pd
-
+import inference
 from preprocess import preprocess_api_input  # from src/backend/preprocess.py
 from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
 
@@ -10,7 +10,7 @@ app = Flask(__name__, template_folder="src/html")
 
 @app.route("/", methods=["GET"])
 def main_route():
-    return jsonify({"id": "1"})
+    return jsonify({"id": True}), 404
 
 
 # API: /api/prediction/preditiondata
