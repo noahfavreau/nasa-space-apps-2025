@@ -95,12 +95,11 @@ def generate_shap_graph():
     """
     Generate SHAP analysis for the provided exoplanet data
     """
-    
     try:
         data = request.get_json(silent=True)
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
-        
+
         # Validate required fields
         required_fields = [
             "orbital_period",
@@ -114,11 +113,15 @@ def generate_shap_graph():
             "insolation_flux",
             "stellar_temperature",
         ]
-        
+
+        # Map "insolation flux" to "insolation_flux" if necessary
+        if "insolation flux" in data:
+            data["insolation_flux"] = data.pop("insolation flux")
+
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
-        
+
         X_inf = pd.DataFrame([data])
 
         # --- FIX: Use a base model for SHAP, not the meta-model ---
@@ -128,16 +131,16 @@ def generate_shap_graph():
             base_models = model.base_models["xgboost"]
             if base_models and len(base_models) > 0:
                 base_model = base_models[0]
-        
+
         if base_model is None:
             return jsonify({"error": "No base model available for SHAP analysis"}), 500
 
         # Run SHAP analysis on base model
         from shap_generator import generate_shap_analysis
         result = generate_shap_analysis(base_model, X_inf)
-        
+
         return jsonify(result), 200
-        
+
     except Exception as e:
         return jsonify(
             {"success": False, "error": f"SHAP analysis failed: {str(e)}"}
