@@ -71,11 +71,11 @@ class ExoplanetClassifier:
         self.base_models = self._load_base_models()
         self.scaler = None  # scaler will be set if needed for TabNet
         
-        # Define the original feature names
+        # Define the original feature names in the exact order the model expects
         self.feature_names = [
             'orbital_period', 'stellar_radius', 'rate_of_ascension', 'declination',
             'transit_duration', 'transit_depth', 'planet_radius', 'planet_temperature',
-            'insolation flux', 'stellar_temperature'
+            'stellar_temperature', 'insolation flux'
         ]
         
         print(f"Loaded {len(self.base_models)} base models and meta-model") # print information about the loaded models
@@ -300,7 +300,7 @@ class ExoplanetClassifier:
             raw_features: raw features in order:
                 [orbital_period, stellar_radius, rate_of_ascension, declination,
                  transit_duration, transit_depth, planet_radius, planet_temperature,
-                 insolation flux, stellar_temperature]
+                 stellar_temperature, insolation flux]
         Returns:
             Dictionary with prediction results
         """

@@ -65,8 +65,8 @@ def preditiondata():
         "transit_depth",
         "planet_radius",
         "planet_temperature",
-        "insolation flux",
         "stellar_temperature",
+        "insolation flux",
     ]
     
     missing_fields = [field for field in required_fields if field not in data]
@@ -120,8 +120,8 @@ def generate_shap_graph():
             "transit_depth",
             "planet_radius",
             "planet_temperature",
-            "insolation flux",
             "stellar_temperature",
+            "insolation flux",
         ]
 
         # Map "insolation_flux" to "insolation flux" if necessary for API compatibility

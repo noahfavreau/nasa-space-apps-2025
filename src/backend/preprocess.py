@@ -28,7 +28,7 @@ if result['success']:
 Output: Always returns standardized DataFrame with columns:
 [orbital_period, stellar_radius, rate_of_ascension, declination, 
  transit_duration, transit_depth, planet_radius, planet_temperature, 
- insolation flux, stellar_temperature, disposition]
+ stellar_temperature, insolation flux, disposition]
 """
 
 import pandas as pd
@@ -61,7 +61,7 @@ def preprocess(data):
         Preprocessed data ready for model prediction with standardized columns:
         [orbital_period, stellar_radius, rate_of_ascension, declination, 
          transit_duration, transit_depth, planet_radius, planet_temperature, 
-         insolation flux, stellar_temperature, disposition]
+         stellar_temperature, insolation flux, disposition]
     """
     
     # Convert input to DataFrame
@@ -303,10 +303,11 @@ def preprocess_for_prediction(data):
         processed_data = processed_data.drop(columns=['name'])
     
     # Ensure columns are in the correct order for model prediction
+    # This order MUST match the trained model's expected feature order
     expected_columns = [
         'orbital_period', 'stellar_radius', 'rate_of_ascension', 'declination',
         'transit_duration', 'transit_depth', 'planet_radius', 'planet_temperature',
-        'insolation flux', 'stellar_temperature'
+        'stellar_temperature', 'insolation flux'
     ]
     
     # Reorder columns to match training data
