@@ -229,7 +229,6 @@ class ExoplanetClassifier:
         
         Args:
             features: Feature vector for a single object
-            
         Returns:
             Dictionary with prediction results
         """
@@ -269,7 +268,6 @@ class ExoplanetClassifier:
                 "count": len(models),
                 "parameters": self.best_params.get(model_type, {})
             }
-        
         return info
 
 
@@ -284,33 +282,3 @@ def load_classifier(model_dir: str = ".") -> ExoplanetClassifier:
     """
     return ExoplanetClassifier(model_dir)
 
-
-# Simple test - just enter values and get predictions
-if __name__ == "__main__":
-    # Load the classifier
-    classifier = load_classifier()
-    
-    # Create some test values (adjust the number of features as needed)
-    # This is just random data - replace with your actual features
-    test_values = np.array([1.2, 0.5, -0.3, 2.1, 0.8, 1.5, -1.2, 0.9, 1.1, 0.4, 
-                           0.7, 1.8, -0.6, 1.3, 0.2, 1.6, -0.8, 1.0, 0.3, 1.4])
-    
-    # Make prediction
-    prediction = classifier.predict(test_values.reshape(1, -1))  # Reshape for single prediction
-    probabilities = classifier.predict_proba(test_values.reshape(1, -1))
-    
-    # Print results
-    class_labels = {0: "Not Exoplanet", 1: "Exoplanet", 2: "Uncertain"}
-    print(f"Prediction: {class_labels[prediction[0]]}")
-    print(f"Probabilities: {probabilities[0]}")
-    print(f"Confidence: {max(probabilities[0]):.3f}")
-    
-    print("\n" + "="*50)
-    print("SIMPLE USAGE:")
-    print("="*50)
-    print("""
-# Just 3 lines of code:
-classifier = load_classifier()
-prediction = classifier.predict(your_values.reshape(1, -1))
-print(prediction)
-""")
