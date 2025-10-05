@@ -10,7 +10,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
 
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&" />
@@ -44,7 +46,8 @@
                 <div class="prediction-hero__content">
                     <p class="eyebrow">Prediction studio</p>
                     <h1>Build the next exoplanet insights</h1>
-                    <p class="description">Prepare candidate objects, import datasets of matching structure, and trigger the pipeline when everything looks ready. This space will host the full workflow.</p>
+                    <p class="description">Prepare candidate objects, import datasets of matching structure, and trigger
+                        the pipeline when everything looks ready. This space will host the full workflow.</p>
                     <div class="prediction-hero__actions">
                         <a href="#object-library" class="button button--primary">Review data objects</a>
                         <a href="#dataset-runner" class="button button--ghost">Skip to prediction</a>
@@ -73,11 +76,14 @@
             <div class="wrapper object-library__wrapper">
                 <div class="section-heading">
                     <h2>Exoplanet Candidates</h2>
-                    <p>Each card represents a potential exoplanet signal from telescope observations. Data includes transit characteristics, orbital parameters, and host star properties. Configure candidate objects to prepare them for machine learning classification.</p>
+                    <p>Each card represents a potential exoplanet signal from telescope observations. Data includes
+                        transit characteristics, orbital parameters, and host star properties. Configure candidate
+                        objects to prepare them for machine learning classification.</p>
                 </div>
 
                 <div class="object-library__actions">
-                    <button type="button" class="button button--neutral" data-action="add-object">Add object manually</button>
+                    <button type="button" class="button button--neutral" data-action="add-object">Add object
+                        manually</button>
                     <label class="button button--neutral file-picker" data-action="import-object">
                         <input type="file" accept=".json,.csv" name="object-import">
                         <span>Import CSV or JSON</span>
@@ -85,110 +91,192 @@
                 </div>
 
                 <div class="data-card-grid" data-object-grid>
-                    <article class="data-card is-placeholder" data-object-card data-object-id="object-001" tabindex="0" role="button" aria-pressed="false">
+                    <article class="data-card is-placeholder" data-object-card data-object-id="object-001" tabindex="0"
+                        role="button" aria-pressed="false">
                         <header class="data-card__header">
                             <div>
-                                <h3>Kepler-452b Candidate</h3>
-                                <p class="data-card__subtitle">KIC 8311864 • Confirmed Exoplanet</p>
+                                <h3>Kepler-227 b</h3>
+                                <p class="data-card__subtitle">K00752.01 - CONFIRMED</p>
                             </div>
                             <div class="data-card__controls">
                                 <span class="data-card__status">Ready</span>
-                                <button type="button" class="data-card__delete" data-card-action="delete" aria-label="Delete object" title="Delete object">×</button>
+                                <button type="button" class="data-card__delete" data-card-action="delete"
+                                    aria-label="Delete object" title="Delete object">×</button>
                             </div>
                         </header>
                         <dl class="data-card__metrics">
                             <div>
                                 <dt>Orbital Period</dt>
-                                <dd>384.8 days</dd>
+                                <dd>9.48803557</dd>
                             </div>
                             <div>
-                                <dt>Planet Radius</dt>
-                                <dd>1.63 R⊕</dd>
+                                <dt>Stellar Radius</dt>
+                                <dd>0.927</dd>
+                            </div>
+                            <div>
+                                <dt>Rate of Ascension</dt>
+                                <dd>291.934230</dd>
+                            </div>
+                            <div>
+                                <dt>Declination</dt>
+                                <dd>48.141651</dd>
+                            </div>
+                            <div>
+                                <dt>Transit Duration</dt>
+                                <dd>2.9575</dd>
                             </div>
                             <div>
                                 <dt>Transit Depth</dt>
-                                <dd>0.0035%</dd>
+                                <dd>615.8</dd>
                             </div>
                             <div>
-                                <dt>Stellar Magnitude</dt>
-                                <dd>13.426 Kep</dd>
+                                <dt>Planet Radius</dt>
+                                <dd>2.26</dd>
+                            </div>
+                            <div>
+                                <dt>Planet Temperature</dt>
+                                <dd>793</dd>
+                            </div>
+                            <div>
+                                <dt>Insolation Flux</dt>
+                                <dd>93.59</dd>
+                            </div>
+                            <div>
+                                <dt>Stellar Temperature</dt>
+                                <dd>5455</dd>
                             </div>
                         </dl>
                         <footer class="data-card__footer">
-                            <button type="button" class="button button--ghost" data-card-action="open-shell">Open object shell</button>
+                            <button type="button" class="button button--ghost" data-card-action="open-shell">Open object
+                                shell</button>
                         </footer>
                     </article>
 
-                    <article class="data-card is-placeholder" data-object-card data-object-id="object-002" tabindex="0" role="button" aria-pressed="false">
+                    <article class="data-card is-placeholder" data-object-card data-object-id="object-002" tabindex="0"
+                        role="button" aria-pressed="false">
                         <header class="data-card__header">
                             <div>
-                                <h3>TRAPPIST-1e Transit</h3>
-                                <p class="data-card__subtitle">2MASS J23062928-0502285 • Candidate</p>
+                                <h3>Kepler-228 c</h3>
+                                <p class="data-card__subtitle">K00756.02 - CANDIDATE</p>
                             </div>
                             <div class="data-card__controls">
                                 <span class="data-card__status">Processing</span>
-                                <button type="button" class="data-card__delete" data-card-action="delete" aria-label="Delete object" title="Delete object">×</button>
+                                <button type="button" class="data-card__delete" data-card-action="delete"
+                                    aria-label="Delete object" title="Delete object">×</button>
                             </div>
                         </header>
                         <dl class="data-card__metrics">
                             <div>
                                 <dt>Orbital Period</dt>
-                                <dd>6.1 days</dd>
+                                <dd>4.13443512</dd>
                             </div>
                             <div>
-                                <dt>Planet Radius</dt>
-                                <dd>0.92 R⊕</dd>
+                                <dt>Stellar Radius</dt>
+                                <dd>0.972</dd>
+                            </div>
+                            <div>
+                                <dt>Rate of Ascension</dt>
+                                <dd>296.286130</dd>
+                            </div>
+                            <div>
+                                <dt>Declination</dt>
+                                <dd>48.224670</dd>
+                            </div>
+                            <div>
+                                <dt>Transit Duration</dt>
+                                <dd>3.1402</dd>
                             </div>
                             <div>
                                 <dt>Transit Depth</dt>
-                                <dd>0.0051%</dd>
+                                <dd>686</dd>
                             </div>
                             <div>
-                                <dt>Equilibrium Temp</dt>
-                                <dd>251 K</dd>
+                                <dt>Planet Radius</dt>
+                                <dd>2.77</dd>
+                            </div>
+                            <div>
+                                <dt>Planet Temperature</dt>
+                                <dd>1160</dd>
+                            </div>
+                            <div>
+                                <dt>Insolation Flux</dt>
+                                <dd>427.65</dd>
+                            </div>
+                            <div>
+                                <dt>Stellar Temperature</dt>
+                                <dd>6046</dd>
                             </div>
                         </dl>
                         <footer class="data-card__footer">
-                            <button type="button" class="button button--ghost" data-card-action="duplicate">Duplicate layout</button>
+                            <button type="button" class="button button--ghost" data-card-action="duplicate">Duplicate
+                                layout</button>
                         </footer>
                     </article>
 
-                    <article class="data-card is-placeholder" data-object-card data-object-id="object-003" tabindex="0" role="button" aria-pressed="false">
+                    <article class="data-card is-placeholder" data-object-card data-object-id="object-003" tabindex="0"
+                        role="button" aria-pressed="false">
                         <header class="data-card__header">
                             <div>
-                                <h3>TOI-715.01 Signal</h3>
-                                <p class="data-card__subtitle">TESS Object of Interest • Under Review</p>
+                                <h3>KepID 10419211</h3>
+                                <p class="data-card__subtitle">K00742.01 - FALSE POSITIVE</p>
                             </div>
                             <div class="data-card__controls">
                                 <span class="data-card__status">Draft</span>
-                                <button type="button" class="data-card__delete" data-card-action="delete" aria-label="Delete object" title="Delete object">×</button>
+                                <button type="button" class="data-card__delete" data-card-action="delete"
+                                    aria-label="Delete object" title="Delete object">×</button>
                             </div>
                         </header>
                         <dl class="data-card__metrics">
                             <div>
                                 <dt>Orbital Period</dt>
-                                <dd>19.3 days</dd>
+                                <dd>11.521446064</dd>
+                            </div>
+                            <div>
+                                <dt>Stellar Radius</dt>
+                                <dd>0.848</dd>
+                            </div>
+                            <div>
+                                <dt>Rate of Ascension</dt>
+                                <dd>297.079930</dd>
+                            </div>
+                            <div>
+                                <dt>Declination</dt>
+                                <dd>47.597401</dd>
+                            </div>
+                            <div>
+                                <dt>Transit Duration</dt>
+                                <dd>3.6399</dd>
+                            </div>
+                            <div>
+                                <dt>Transit Depth</dt>
+                                <dd>17984.3</dd>
                             </div>
                             <div>
                                 <dt>Planet Radius</dt>
-                                <dd>1.55 R⊕</dd>
+                                <dd>150.51</dd>
                             </div>
                             <div>
-                                <dt>Signal Strength</dt>
-                                <dd>8.2 σ</dd>
+                                <dt>Planet Temperature</dt>
+                                <dd>753</dd>
                             </div>
                             <div>
-                                <dt>Host Star Type</dt>
-                                <dd>M-dwarf</dd>
+                                <dt>Insolation Flux</dt>
+                                <dd>75.88</dd>
+                            </div>
+                            <div>
+                                <dt>Stellar Temperature</dt>
+                                <dd>5795</dd>
                             </div>
                         </dl>
                         <footer class="data-card__footer">
-                            <button type="button" class="button button--ghost" data-card-action="map-fields">Map fields</button>
+                            <button type="button" class="button button--ghost" data-card-action="map-fields">Map
+                                fields</button>
                         </footer>
                     </article>
                 </div>
                 <template id="data-card-template">
-                    <article class="data-card is-placeholder" data-object-card tabindex="0" role="button" aria-pressed="false">
+                    <article class="data-card is-placeholder" data-object-card tabindex="0" role="button"
+                        aria-pressed="false">
                         <header class="data-card__header">
                             <div>
                                 <h3 data-card-title>New Exoplanet Candidate</h3>
@@ -196,7 +284,8 @@
                             </div>
                             <div class="data-card__controls">
                                 <span class="data-card__status" data-card-status>Draft</span>
-                                <button type="button" class="data-card__delete" data-card-action="delete" aria-label="Delete object" title="Delete object">×</button>
+                                <button type="button" class="data-card__delete" data-card-action="delete"
+                                    aria-label="Delete object" title="Delete object">×</button>
                             </div>
                         </header>
                         <dl class="data-card__metrics" data-card-metrics>
@@ -218,7 +307,8 @@
                             </div>
                         </dl>
                         <footer class="data-card__footer">
-                            <button type="button" class="button button--ghost" data-card-action="configure">Configure object</button>
+                            <button type="button" class="button button--ghost" data-card-action="configure">Configure
+                                object</button>
                         </footer>
                     </article>
                 </template>
@@ -227,18 +317,22 @@
 
         <div class="object-inspector" data-object-inspector aria-hidden="true" hidden>
             <div class="object-inspector__backdrop" data-action="close-inspector"></div>
-            <aside class="object-inspector__panel" role="dialog" aria-modal="true" aria-labelledby="objectInspectorTitle" tabindex="-1">
+            <aside class="object-inspector__panel" role="dialog" aria-modal="true"
+                aria-labelledby="objectInspectorTitle" tabindex="-1">
                 <header class="object-inspector__header">
                     <div class="object-inspector__heading">
                         <p class="object-inspector__eyebrow" data-inspector-mode>Object shell</p>
-                        <h3 class="object-inspector__title" id="objectInspectorTitle" data-inspector-title>Selected object</h3>
+                        <h3 class="object-inspector__title" id="objectInspectorTitle" data-inspector-title>Selected
+                            object</h3>
                         <p class="object-inspector__meta" data-inspector-meta>ID — Status</p>
                     </div>
-                    <button type="button" class="object-inspector__close" data-action="close-inspector" aria-label="Close object inspector">×</button>
+                    <button type="button" class="object-inspector__close" data-action="close-inspector"
+                        aria-label="Close object inspector">×</button>
                 </header>
 
                 <form class="object-inspector__form" data-inspector-form>
-                    <p class="object-inspector__helper" data-inspector-helper>Use this workspace to adjust the placeholder values. Nothing is saved to the backend yet.</p>
+                    <p class="object-inspector__helper" data-inspector-helper>Use this workspace to adjust the
+                        placeholder values. Nothing is saved to the backend yet.</p>
 
                     <label class="object-inspector__field">
                         <span>Object name</span>
@@ -247,7 +341,8 @@
 
                     <label class="object-inspector__field">
                         <span>Identifier / subtitle</span>
-                        <input type="text" name="object-subtitle" data-inspector-subtitle placeholder="Identifier or metadata snippet">
+                        <input type="text" name="object-subtitle" data-inspector-subtitle
+                            placeholder="Identifier or metadata snippet">
                     </label>
 
                     <div class="object-inspector__feature-group" data-inspector-features>
@@ -256,7 +351,8 @@
 
                     <label class="object-inspector__field object-inspector__field--textarea">
                         <span>Notes for the team</span>
-                        <textarea name="object-notes" rows="3" data-inspector-notes placeholder="Leave reminders or mapping hints."></textarea>
+                        <textarea name="object-notes" rows="3" data-inspector-notes
+                            placeholder="Leave reminders or mapping hints."></textarea>
                     </label>
 
                     <div class="object-inspector__actions">
@@ -271,41 +367,50 @@
             <div class="wrapper dataset-runner__wrapper">
                 <div class="dataset-runner__intro">
                     <h2>Exoplanet Classification</h2>
-                    <p>Run machine learning models on individual candidates or bulk datasets. Upload transit light curves, stellar parameters, or preprocessed feature sets. The model will classify signals as confirmed planets, false positives, or candidates requiring further observation.</p>
+                    <p>Run machine learning models on individual candidates or bulk datasets. Upload transit light
+                        curves, stellar parameters, or preprocessed feature sets. The model will classify signals as
+                        confirmed planets, false positives, or candidates requiring further observation.</p>
                 </div>
 
                 <div class="dataset-runner__grid">
                     <article class="dataset-option" data-dataset-option="single">
                         <h3>Single Candidate</h3>
-                        <p>Analyze one exoplanet candidate at a time for detailed classification and confidence scoring.</p>
+                        <p>Analyze one exoplanet candidate at a time for detailed classification and confidence scoring.
+                        </p>
                         <div class="dataset-option__controls">
-                            <button type="button" class="button button--primary" data-action="choose-card">Choose candidate</button>
+                            <button type="button" class="button button--primary" data-action="choose-card">Choose
+                                candidate</button>
                             <label class="button button--ghost file-picker" data-action="upload-single">
                                 <input type="file" accept=".json" name="single-object">
                                 <span>Upload JSON</span>
                             </label>
                         </div>
-                        <p class="dataset-option__status" data-selection-status aria-live="polite">Single candidate: no selection yet.</p>
+                        <p class="dataset-option__status" data-selection-status aria-live="polite">Single candidate: no
+                            selection yet.</p>
                         <ul class="upload-chip-list" data-upload-list="single" aria-live="polite"></ul>
                     </article>
 
                     <article class="dataset-option" data-dataset-option="bulk">
                         <h3>Bulk Dataset</h3>
-                        <p>Process large catalogs of transit signals for automated screening and candidate identification.</p>
+                        <p>Process large catalogs of transit signals for automated screening and candidate
+                            identification.</p>
                         <div class="dataset-option__controls">
                             <label class="button button--primary file-picker" data-action="upload-bulk">
                                 <input type="file" accept=".csv,.json" name="dataset" multiple>
                                 <span>Upload catalog</span>
                             </label>
-                            <button type="button" class="button button--ghost" data-action="link-remote">Link MAST archive</button>
+                            <button type="button" class="button button--ghost" data-action="link-remote">Link MAST
+                                archive</button>
                         </div>
                         <ul class="upload-chip-list" data-upload-list="bulk" aria-live="polite"></ul>
                     </article>
                 </div>
 
                 <div class="prediction-trigger">
-                    <button type="button" class="button button--accent" data-action="run-prediction">Run classification</button>
-                    <p class="prediction-trigger__hint">Classification results, confidence scores, and transit visualizations will appear below once processing is complete.</p>
+                    <button type="button" class="button button--accent" data-action="run-prediction">Run
+                        classification</button>
+                    <p class="prediction-trigger__hint">Classification results, confidence scores, and transit
+                        visualizations will appear below once processing is complete.</p>
                 </div>
             </div>
         </section>
@@ -314,7 +419,8 @@
             <div class="wrapper prediction-output__wrapper">
                 <header class="section-heading">
                     <h2>Classification Results</h2>
-                    <p>View model predictions, confidence scores, and explanatory visualizations. Export results for further analysis or integration with astronomical databases.</p>
+                    <p>View model predictions, confidence scores, and explanatory visualizations. Export results for
+                        further analysis or integration with astronomical databases.</p>
                 </header>
 
                 <div class="output-grid">
@@ -332,7 +438,8 @@
                     </article>
                 </div>
                 <div class="prediction-output__log" data-output-log aria-live="polite">
-                    <p>Ready for exoplanet classification. Select candidates above and run the machine learning model.</p>
+                    <p>Ready for exoplanet classification. Select candidates above and run the machine learning model.
+                    </p>
                 </div>
             </div>
         </section>
