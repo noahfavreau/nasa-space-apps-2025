@@ -88,10 +88,23 @@ def generate_shap_graph():
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
-        X_inf = pd.DataFrame([data])
+        # Convert to DataFrame and generate meta-features for SHAP analysis
+        raw_features = pd.DataFrame([data])
         
-        # Generate SHAP analysis
-        result = generate_shap_analysis(model, X_inf)
+        # Generate meta-features using the same process as prediction
+        meta_features = model._get_base_probabilities(raw_features.values)
+        
+        # Convert meta-features to DataFrame for SHAP analysis
+        meta_feature_names = [
+            'catboost_exoplanet', 'catboost_uncertain', 'catboost_not_exoplanet',
+            'lightgbm_exoplanet', 'lightgbm_uncertain', 'lightgbm_not_exoplanet',
+            'xgboost_exoplanet', 'xgboost_uncertain', 'xgboost_not_exoplanet',
+            'tabnet_exoplanet', 'tabnet_uncertain', 'tabnet_not_exoplanet'
+        ]
+        X_inf = pd.DataFrame(meta_features, columns=meta_feature_names)
+        
+        # Generate SHAP analysis using meta-features and meta-model
+        result = generate_shap_analysis(model.meta_model, X_inf)
         
         return jsonify(result), 200
         
