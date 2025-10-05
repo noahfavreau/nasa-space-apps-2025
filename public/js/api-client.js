@@ -157,7 +157,8 @@ class ExoScanAPI {
   async generateSHAPAnalysis(predictionData) {
     try {
       const response = await this._fetch(this.endpoints.shapReport, {
-        method: 'GET'
+        method: 'POST',
+        body: JSON.stringify(predictionData)
       });
 
       return {

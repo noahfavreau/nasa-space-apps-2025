@@ -64,9 +64,40 @@ def fillexample(example_id):
     return jsonify(return_value), 200
 
 
-@app.route("/api/report/shap", methods=["GET"])
+@app.route("/api/report/shap", methods=["POST"])
 def generate_shap_graph():
-    return jsonify(generate_shap_analysis())
+    global model
+    """
+    Generate SHAP analysis for the provided exoplanet data
+    """
+    try:
+        data = request.get_json(silent=True)
+        if data is None:
+            return jsonify({"error": "Invalid or missing JSON"}), 400
+        
+        # Validate required fields
+        required_fields = [
+            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+            "insolation_flux", "stellar_temperature"
+        ]
+        
+        for field in required_fields:
+            if field not in data:
+                return jsonify({"error": f"Missing required field: {field}"}), 400
+        
+        X_inf = pd.DataFrame([data])
+        
+        # Generate SHAP analysis
+        result = generate_shap_analysis(model, X_inf)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"SHAP analysis failed: {str(e)}"
+        }), 500
 
 
 if __name__ == "__main__":
