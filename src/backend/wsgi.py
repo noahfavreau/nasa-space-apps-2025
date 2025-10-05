@@ -28,6 +28,7 @@ model = inference.load_classifier("../model")
 def restart():
     p = Path("/tmp/reboot.txt")
     p.touch(exist_ok=True)
+    return {"a": True}
 
 
 @app.route("/", methods=["GET"])
