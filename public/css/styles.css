@@ -123,6 +123,7 @@ p {
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
+    padding: 0 var(--spacing-sm);
 }
 
 /* ==========================================================================
@@ -803,10 +804,54 @@ body.prediction-page .header{
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.14em;
-    color: rgba(240, 220, 106, 0.8);
-    background: rgba(240, 220, 106, 0.1);
     border-radius: 999px;
     padding: 6px 12px;
+}
+
+/* Status color variants */
+.data-card__status:is([data-card-status], [class*="Draft"]) {
+    color: rgba(240, 220, 106, 0.8);
+    background: rgba(240, 220, 106, 0.1);
+}
+
+.data-card__status:contains("Ready"), 
+.data-card[data-object-id="object-001"] .data-card__status {
+    color: rgba(106, 240, 174, 0.8);
+    background: rgba(106, 240, 174, 0.1);
+}
+
+.data-card__status:contains("Processing"),
+.data-card[data-object-id="object-002"] .data-card__status {
+    color: rgba(106, 174, 240, 0.8);
+    background: rgba(106, 174, 240, 0.1);
+}
+
+.data-card__controls{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-card__delete{
+    background: rgba(255, 89, 89, 0.1);
+    color: rgba(255, 89, 89, 0.8);
+    border: 1px solid rgba(255, 89, 89, 0.2);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.data-card__delete:hover{
+    background: rgba(255, 89, 89, 0.2);
+    color: rgba(255, 89, 89, 1);
+    border-color: rgba(255, 89, 89, 0.4);
 }
 
 .data-card__metrics{
@@ -1346,6 +1391,18 @@ body.prediction-page.is-inspector-open{
 }
 
 @media (max-width: 860px){
+    .wrapper {
+        padding: 0 var(--spacing-sm);
+    }
+    
+    .object-library, .dataset-runner {
+        padding: var(--spacing-lg) var(--spacing-sm) 0;
+    }
+    
+    .prediction-output {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
     .header .wrapper{
         flex-direction: column;
         align-items: flex-start;

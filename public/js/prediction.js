@@ -677,6 +677,8 @@
         openInspector(elements, state, card, 'map');
       } else if (action === 'duplicate') {
         duplicateCard(card, elements, state);
+      } else if (action === 'delete') {
+        deleteCard(card, elements, state);
       }
 
       if (wasChooseMode && objectId) {
@@ -730,6 +732,41 @@
       value: metric && metric.value ? metric.value : 'Awaiting value'
     }));
   }
+
+  function deleteCard(cardElement, elements, state) {
+    if (!cardElement) {
+      return;
+    }
+
+    const cardId = cardElement.getAttribute('data-object-id');
+    const cardTitle = getCardTitle(cardElement) || cardId;
+
+    // Don't allow deletion if it's the only card
+    if (state.cards.length <= 1) {
+      pushLog(state, elements.outputLog, 'Cannot delete the last remaining object.');
+      return;
+    }
+
+    // Remove from state
+    const cardIndex = state.cards.findIndex((card) => card.id === cardId);
+    if (cardIndex !== -1) {
+      state.cards.splice(cardIndex, 1);
+    }
+
+    // Update selections if this card was selected
+    if (state.selectedId === cardId) {
+      state.selectedId = state.cards.length > 0 ? state.cards[0].id : null;
+    }
+    if (state.runnerSelectionId === cardId) {
+      state.runnerSelectionId = state.selectedId;
+    }
+
+    renderCards(elements, state);
+    persistState(state);
+
+    pushLog(state, elements.outputLog, 'Deleted object: ' + cardTitle + '.');
+  }
+
   function initSingleUpload(elements, state) {
     if (!elements.singleUploadInput) {
       return;
@@ -813,6 +850,10 @@
     }
 
     elements.runButton.addEventListener('click', () => {
+      // Provide immediate user feedback
+      elements.runButton.disabled = true;
+      elements.runButton.textContent = 'Processing...';
+      
       const summary = [];
       if (state.runnerSelectionId) {
         summary.push('Single object: ' + state.runnerSelectionId + '.');
@@ -834,6 +875,12 @@
 
       summary.push('API call pending backend wiring.');
       pushLog(state, elements.outputLog, summary.join(' '));
+      
+      // Reset button after a short delay to simulate processing
+      setTimeout(() => {
+        elements.runButton.disabled = false;
+        elements.runButton.textContent = 'Run classification';
+      }, 1500);
     });
   }
 
