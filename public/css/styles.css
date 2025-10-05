@@ -527,22 +527,12 @@ body.prediction-page main{
     padding-bottom: var(--spacing-xl);
 }
 
-body.prediction-page p{
-    color: rgba(231, 239, 250, 0.82);
-}
+.data .data_container{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm) var(--spacing-md);
 
-body.prediction-page .header{
-    position: absolute;
-}
-
-.prediction-hero{
-    position: relative;
-    overflow: hidden;
-    background:
-        linear-gradient(135deg, rgba(12, 15, 33, 0.92), rgba(30, 19, 56, 0.9)),
-        url(../assets/space_background2.jpg) center/cover no-repeat;
-    min-height: clamp(600px, 85vh, 820px);
-    padding: clamp(140px, 18vh, 220px) var(--spacing-sm) var(--spacing-xl);
+    padding: var(--spacing-md) 0 var(--spacing-md);
 }
 
 .prediction-hero::before{
