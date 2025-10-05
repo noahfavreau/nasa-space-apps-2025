@@ -16,7 +16,7 @@ def main_route():
 
 
 # API: /api/prediction/preditiondata
-@app.route("/api/prediction/preditiondata", methods=["GET", "POST"])
+@app.route("/api/prediction/predictiondata", methods=["GET", "POST"])
 def preditiondata():  # name follows route; fix typo if desired
     global model
     """
