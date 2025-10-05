@@ -214,16 +214,11 @@ def _apply_preprocessing_pipeline(df):
         if col in df.columns:
             df[col] = df[col].apply(lambda x: np.log10(x) if pd.notna(x) and x > 0 else np.nan)
     
-    # Separate features and target
+    # Remove the 'disposition' column if present (not used for inference)
     if "disposition" in df.columns:
-        y = df["disposition"]
-        X = df.drop(columns=["disposition"])
-    else:
-        y = None
-        X = df.copy()
+        df = df.drop(columns=["disposition"])
     
     # For inference, use pre-computed robust scaling parameters from training data
-    # These values are approximated from the training dataset statistics
     training_stats = {
         'orbital_period': {'median': 1.5, 'iqr': 1.2},
         'stellar_radius': {'median': 8.8, 'iqr': 0.3},
@@ -238,29 +233,23 @@ def _apply_preprocessing_pipeline(df):
     }
     
     # Apply robust scaling using training statistics
-    numeric_cols = X.select_dtypes(include=[np.number]).columns.tolist()
-    X_scaled = X.copy()
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    df_scaled = df.copy()
     
     for col in numeric_cols:
         if col in training_stats:
             median = training_stats[col]['median']
             iqr = training_stats[col]['iqr']
             # Robust scaling: (x - median) / IQR
-            X_scaled[col] = (X[col] - median) / iqr
+            df_scaled[col] = (df[col] - median) / iqr
         else:
             # For columns without training stats, use simple standardization
-            if len(X) > 1:
+            if len(df) > 1:
                 # Multiple samples - can compute stats
-                X_scaled[col] = (X[col] - X[col].median()) / (X[col].quantile(0.75) - X[col].quantile(0.25))
+                df_scaled[col] = (df[col] - df[col].median()) / (df[col].quantile(0.75) - df[col].quantile(0.25))
             else:
                 # Single sample - keep as is (no meaningful scaling possible)
-                X_scaled[col] = X[col]
-    
-    # Combine back with target
-    if y is not None:
-        df_scaled = pd.concat([X_scaled, y.reset_index(drop=True)], axis=1)
-    else:
-        df_scaled = X_scaled
+                df_scaled[col] = df[col]
     
     # Handle missing values - for single samples, use simple median imputation
     # rather than KNN which requires multiple samples
@@ -285,27 +274,10 @@ def _apply_preprocessing_pipeline(df):
                 df_scaled[col] = df_scaled[col].fillna(fill_value)
     else:
         # Multiple samples: use KNN imputation as before
-        if "disposition" in df_scaled.columns:
-            num_cols = df_scaled.select_dtypes(include=[np.number]).columns.tolist()
-            
-            for disposition_class in df_scaled["disposition"].unique():
-                if pd.isna(disposition_class):
-                    continue
-                    
-                mask = df_scaled["disposition"] == disposition_class
-                
-                if mask.sum() > 0 and len(num_cols) > 0:
-                    n_neighbors = min(5, mask.sum())
-                    if n_neighbors > 0:
-                        imputer = KNNImputer(n_neighbors=n_neighbors)
-                        df_scaled.loc[mask, num_cols] = imputer.fit_transform(df_scaled.loc[mask, num_cols])
-        else:
-            # No disposition column, impute all numeric data together
-            num_cols = df_scaled.select_dtypes(include=[np.number]).columns.tolist()
-            
-            if len(num_cols) > 0:
-                imputer = KNNImputer(n_neighbors=min(5, len(df_scaled)))
-                df_scaled[num_cols] = imputer.fit_transform(df_scaled[num_cols])
+        num_cols = df_scaled.select_dtypes(include=[np.number]).columns.tolist()
+        if len(num_cols) > 0:
+            imputer = KNNImputer(n_neighbors=min(5, len(df_scaled)))
+            df_scaled[num_cols] = imputer.fit_transform(df_scaled[num_cols])
     
     return df_scaled
 
@@ -334,7 +306,7 @@ def preprocess_for_prediction(data):
     expected_columns = [
         'orbital_period', 'stellar_radius', 'rate_of_ascension', 'declination',
         'transit_duration', 'transit_depth', 'planet_radius', 'planet_temperature',
-        'insolation flux', 'stellar_temperature', 'disposition'
+        'insolation flux', 'stellar_temperature'
     ]
     
     # Reorder columns to match training data
