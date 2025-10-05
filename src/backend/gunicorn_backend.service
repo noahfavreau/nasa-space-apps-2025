@@ -9,8 +9,8 @@ Group=serge
 PIDFile=/home/serge/.gunicorn.pid
 Type=simple
 ExecStart=/home/serge/prog/nasa-space-apps-2025/src/backend/start.sh
-ExecReload=/home/serge/prog/nasa-space-apps-2025/src/backend/restart.sh $MANPID
-ExecStop=/bin/kill -s TERM $MANPID
+ExecReload=/home/serge/prog/nasa-space-apps-2025/src/backend/restart.sh $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
 Restart=always
 RestartSec=1
 
