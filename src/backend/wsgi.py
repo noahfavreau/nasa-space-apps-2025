@@ -3,15 +3,31 @@ from flask import Flask, Request, jsonify, request
 from flask_cors import CORS
 import pandas as pd
 import inference
+from preprocess import preprocess_api_input  # from src/backend/preprocess.py
+from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
+from pathlib import Path
 from preprocess import preprocess_api_input 
 from shap_generator import generate_shap_analysis  
 from shap import Explainer
 
 
 app = Flask(__name__, template_folder="src/html")
-CORS(app, origins=['https://www.bottomlessswag.tech', 'http://localhost:3000', 'http://127.0.0.1:3000'])
+CORS(
+    app,
+    origins=[
+        "https://www.bottomlessswag.tech",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+)
 
 model = inference.load_classifier("../model")
+
+
+@app.route("/api/restart")
+def restart():
+    p = Path("/tmp/reboot.txt")
+    p.touch(exist_ok=True)
 
 
 @app.route("/", methods=["GET"])
@@ -85,14 +101,23 @@ def generate_shap_graph():
             data["insolation_flux"] = data.pop("insolation flux")
 
         required_fields = [
-            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
-            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
-            "insolation_flux", "stellar_temperature"
+            "orbital_period",
+            "stellar_radius",
+            "rate_of_ascension",
+            "declination",
+            "transit_duration",
+            "transit_depth",
+            "planet_radius",
+            "planet_temperature",
+            "insolation_flux",
+            "stellar_temperature",
         ]
+
 
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
+
 
         X_inf = pd.DataFrame([data])
         if not hasattr(model, "generate_meta_features"):
@@ -111,10 +136,9 @@ def generate_shap_graph():
         return jsonify(shap_result), 200
 
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"SHAP analysis failed: {str(e)}"
-        }), 500
+        return jsonify(
+            {"success": False, "error": f"SHAP analysis failed: {str(e)}"}
+        ), 500
 
 
 if __name__ == "__main__":
