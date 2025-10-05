@@ -469,8 +469,13 @@
                 </div>
 
                 <div class="prediction-trigger">
-                    <button type="button" class="button button--primary" data-action="run-prediction">Run
-                        classification</button>
+                    <button type="button" class="button button--primary" data-action="run-prediction">
+                        <span class="button-text">Run classification</span>
+                        <div class="loading-spinner" style="display: none;">
+                            <div class="spinner"></div>
+                            <span>Processing...</span>
+                        </div>
+                    </button>
                     <p class="prediction-trigger__hint">Classification results, confidence scores, and transit
                         visualizations will appear below once processing is complete.</p>
                 </div>
@@ -486,13 +491,56 @@
                 </header>
 
                 <div class="output-grid">
-                    <article class="output-panel">
-                        <h3>Classification Metrics</h3>
-                        <p>Accuracy, precision, recall, and F1-scores for exoplanet detection performance.</p>
+                    <article class="output-panel" id="prediction-results-panel" style="display: none;">
+                        <h3>Prediction Results</h3>
+                        <div class="prediction-card">
+                            <div class="prediction-header">
+                                <h4 class="prediction-label">Exoplanet Classification</h4>
+                                <div class="confidence-score">
+                                    <span class="confidence-value">--</span>
+                                    <span class="confidence-label">Confidence</span>
+                                </div>
+                            </div>
+                            <div class="prediction-details">
+                                <div class="class-probabilities">
+                                    <div class="probability-bar">
+                                        <span class="class-name">Exoplanet</span>
+                                        <div class="bar-container">
+                                            <div class="bar exoplanet-bar" style="width: 0%"></div>
+                                            <span class="probability-value">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="probability-bar">
+                                        <span class="class-name">Uncertain</span>
+                                        <div class="bar-container">
+                                            <div class="bar uncertain-bar" style="width: 0%"></div>
+                                            <span class="probability-value">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="probability-bar">
+                                        <span class="class-name">Not Exoplanet</span>
+                                        <div class="bar-container">
+                                            <div class="bar not-exoplanet-bar" style="width: 0%"></div>
+                                            <span class="probability-value">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </article>
-                    <article class="output-panel">
+                    <article class="output-panel" id="shap-results-panel" style="display: none;">
                         <h3>Model Explanations</h3>
-                        <p>SHAP values and feature importance for interpreting classification decisions.</p>
+                        <div class="shap-container">
+                            <div class="shap-summary" id="shap-summary">
+                                <p>SHAP analysis will appear here after prediction.</p>
+                            </div>
+                            <div class="feature-importance" id="feature-importance">
+                                <h4>Feature Importance</h4>
+                                <div class="importance-list" id="importance-list">
+                                    <!-- Feature importance items will be populated here -->
+                                </div>
+                            </div>
+                        </div>
                     </article>
                 </div>
                 <div class="prediction-output__log" data-output-log aria-live="polite">
