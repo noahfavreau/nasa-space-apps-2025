@@ -188,7 +188,7 @@ def _generate_shap_values(model, X_inf):
     # --- NEW: Normalize feature importance to percentage ---
     total_importance = np.sum(feature_importance)
     if total_importance != 0:
-        feature_importance = 100 * feature_importance / total_importance
+        feature_importance = feature_importance / total_importance
     
     return {
         "shap_values": shap_values_for_predictions,
