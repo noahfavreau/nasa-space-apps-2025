@@ -10,7 +10,7 @@ class ExoScanAPI {
   constructor(baseURL = '') {
     this.baseURL = baseURL;
     this.endpoints = {
-      prediction: '/api/prediction/preditiondata',
+      prediction: '/api/prediction/predictiondata',
       graph: '/api/prediction/graph', 
       fillExample: '/api/prediction/fillexample',
       shapReport: '/api/report/shap'

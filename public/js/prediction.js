@@ -912,12 +912,13 @@
           }
         } else if (state.runnerSelectionId) {
           // Use selected card data
-          const selectedCard = state.cards.find(card => card.id === state.runnerSelectionId);
-          if (selectedCard) {
-            summary.push('Processing selected object: ' + state.runnerSelectionId);
-            dataToProcess.push(selectedCard.features);
+          const apiData = extractCardDataForAPI(state.runnerSelectionId, state);
+          if (apiData) {
+            const cardTitle = state.cards.find(card => card.id === state.runnerSelectionId)?.title || state.runnerSelectionId;
+            summary.push('Processing selected object: ' + cardTitle);
+            dataToProcess.push(apiData);
           } else {
-            throw new Error('Selected object not found');
+            throw new Error('Selected object not found or has no valid data');
           }
         }
 
@@ -944,29 +945,41 @@
         }
 
         pushLog(state, elements.outputLog, summary.join('. ') + '. Starting predictions...');
+        
+        // Debug: Log the data being sent to the API
+        if (dataToProcess.length === 1) {
+          pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
+        }
 
         // Make API calls for predictions
         if (dataToProcess.length === 1) {
           // Single prediction
           const result = await exoScanAPI.predictSingle(dataToProcess[0]);
           if (result.success) {
-            predictionResults.push(result.data);
+            predictionResults.push({ success: true, data: result.data });
             pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
           } else {
             throw new Error('Prediction failed: ' + result.error);
           }
         } else {
-          // Batch predictions
-          pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects in batch...`);
-          const batchResult = await exoScanAPI.predictBatch(dataToProcess);
+          // Batch predictions - process one by one since backend expects single objects
+          pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects...`);
           
-          if (batchResult.success) {
-            predictionResults = batchResult.data;
-            const successCount = predictionResults.filter(r => r.success).length;
-            pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${batchResult.totalProcessed} successful`);
-          } else {
-            throw new Error('Batch prediction failed: ' + batchResult.error);
+          for (let i = 0; i < dataToProcess.length; i++) {
+            try {
+              const result = await exoScanAPI.predictSingle(dataToProcess[i]);
+              if (result.success) {
+                predictionResults.push({ success: true, data: result.data });
+              } else {
+                predictionResults.push({ success: false, error: result.error });
+              }
+            } catch (error) {
+              predictionResults.push({ success: false, error: error.message });
+            }
           }
+          
+          const successCount = predictionResults.filter(r => r.success).length;
+          pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${dataToProcess.length} successful`);
         }
 
         // Display results
@@ -1570,6 +1583,68 @@
     });
   }
 
+  // Helper function to extract data from selected card and convert to API format
+  function extractCardDataForAPI(cardId, state) {
+    const card = state.cards.find(c => c.id === cardId);
+    if (!card || !card.metrics) {
+      return null;
+    }
+
+    // Map the card metrics to the required API format
+    const apiData = {
+      "orbital_period": null,
+      "stellar_radius": null,
+      "rate_of_ascension": null,
+      "declination": null,
+      "transit_duration": null,
+      "transit_depth": null,
+      "planet_radius": null,
+      "planet_temperature": null,
+      "insolation_flux": null,
+      "stellar_temperature": null
+    };
+
+    // Map card metrics to API fields based on the labels
+    card.metrics.forEach(metric => {
+      const label = metric.label.toLowerCase();
+      const value = metric.value;
+
+      // Convert value to number if possible, otherwise keep as null
+      let numericValue = null;
+      if (value && value !== 'Awaiting value' && value !== 'Pending validation' && value !== 'Awaiting calculation' && value !== 'Awaiting measurement' && value !== 'Awaiting analysis') {
+        const parsed = parseFloat(value);
+        if (!isNaN(parsed)) {
+          numericValue = parsed;
+        }
+      }
+
+      // Map based on label matching
+      if (label.includes('orbital') && label.includes('period')) {
+        apiData.orbital_period = numericValue;
+      } else if (label.includes('stellar') && label.includes('radius')) {
+        apiData.stellar_radius = numericValue;
+      } else if (label.includes('rate') && label.includes('ascension')) {
+        apiData.rate_of_ascension = numericValue;
+      } else if (label.includes('declination')) {
+        apiData.declination = numericValue;
+      } else if (label.includes('transit') && label.includes('duration')) {
+        apiData.transit_duration = numericValue;
+      } else if (label.includes('transit') && label.includes('depth')) {
+        apiData.transit_depth = numericValue;
+      } else if (label.includes('planet') && label.includes('radius')) {
+        apiData.planet_radius = numericValue;
+      } else if (label.includes('planet') && label.includes('temperature')) {
+        apiData.planet_temperature = numericValue;
+      } else if (label.includes('insolation') && label.includes('flux')) {
+        apiData.insolation_flux = numericValue;
+      } else if (label.includes('stellar') && label.includes('temperature')) {
+        apiData.stellar_temperature = numericValue;
+      }
+    });
+
+    return apiData;
+  }
+
   // Helper functions for API integration
   function displayPredictionResults(results, elements, state) {
     if (!results || results.length === 0) {
@@ -1584,21 +1659,38 @@
       pushLog(state, elements.outputLog, `📊 Prediction Results (${successfulResults.length} successful):`);
       
       successfulResults.forEach((result, index) => {
-        if (result.data && result.data.prediction !== undefined) {
-          const prediction = result.data.prediction;
-          const confidence = (prediction * 100).toFixed(1);
-          let classification = 'Unknown';
+        if (result.data) {
+          // The backend returns the prediction result directly
+          // It could be a single value or an array, depending on the backend implementation
+          let prediction = result.data;
           
-          // Map prediction to classification
-          if (prediction >= 0.7) {
-            classification = 'Confirmed Planet';
-          } else if (prediction >= 0.3) {
-            classification = 'Planet Candidate';
-          } else {
-            classification = 'False Positive';
+          // Handle different response formats
+          if (Array.isArray(prediction)) {
+            prediction = prediction[0]; // Take first prediction if array
           }
           
-          pushLog(state, elements.outputLog, `  ${index + 1}. ${classification} (${confidence}% confidence)`);
+          // Convert to number if it's a string
+          if (typeof prediction === 'string') {
+            prediction = parseFloat(prediction);
+          }
+          
+          if (!isNaN(prediction)) {
+            const confidence = (prediction * 100).toFixed(1);
+            let classification = 'Unknown';
+            
+            // Map prediction to classification
+            if (prediction >= 0.7) {
+              classification = 'Confirmed Planet';
+            } else if (prediction >= 0.3) {
+              classification = 'Planet Candidate';
+            } else {
+              classification = 'False Positive';
+            }
+            
+            pushLog(state, elements.outputLog, `  ${index + 1}. ${classification} (${confidence}% confidence)`);
+          } else {
+            pushLog(state, elements.outputLog, `  ${index + 1}. Prediction value: ${result.data}`);
+          }
         }
       });
     }
