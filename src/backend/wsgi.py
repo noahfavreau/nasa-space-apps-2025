@@ -88,23 +88,22 @@ def generate_shap_graph():
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
         
-        # Convert to DataFrame and generate meta-features for SHAP analysis
-        raw_features = pd.DataFrame([data])
+        X_inf = pd.DataFrame([data])
+
+        # --- FIX: Use a base model for SHAP, not the meta-model ---
+        # Example: Use first XGBoost fold
+        base_model = None
+        if hasattr(model, "base_models") and "xgboost" in model.base_models:
+            base_models = model.base_models["xgboost"]
+            if base_models and len(base_models) > 0:
+                base_model = base_models[0]
         
-        # Generate meta-features using the same process as prediction
-        meta_features = model._get_base_probabilities(raw_features.values)
-        
-        # Convert meta-features to DataFrame for SHAP analysis
-        meta_feature_names = [
-            'catboost_exoplanet', 'catboost_uncertain', 'catboost_not_exoplanet',
-            'lightgbm_exoplanet', 'lightgbm_uncertain', 'lightgbm_not_exoplanet',
-            'xgboost_exoplanet', 'xgboost_uncertain', 'xgboost_not_exoplanet',
-            'tabnet_exoplanet', 'tabnet_uncertain', 'tabnet_not_exoplanet'
-        ]
-        X_inf = pd.DataFrame(meta_features, columns=meta_feature_names)
-        
-        # Generate SHAP analysis using meta-features and meta-model
-        result = generate_shap_analysis(model.meta_model, X_inf)
+        if base_model is None:
+            return jsonify({"error": "No base model available for SHAP analysis"}), 500
+
+        # Run SHAP analysis on base model
+        from shap_generator import generate_shap_analysis
+        result = generate_shap_analysis(base_model, X_inf)
         
         return jsonify(result), 200
         
