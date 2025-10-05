@@ -43,7 +43,9 @@ def preditiondata():  # name follows route; fix typo if desired
         if i not in data:
             return jsonify({"error": "Missing data in JSON"}), 400
 
-    # processing vient ici
+    if "insolation flux" in data:
+        data["insolation_flux"] = data.pop("insolation flux")
+
     return jsonify(model.predict_from_raw_features(list(data.values()))), 200
 
 
