@@ -102,6 +102,9 @@
     initRunAction(elements, state);
     initRemoteLink(elements, state);
 
+    // Check backend status after initialization
+    checkBackendStatus(elements, state);
+
     page.classList.add('is-ready');
   }
 
@@ -839,8 +842,44 @@
       return;
     }
 
-    elements.remoteLinkButton.addEventListener('click', () => {
-      pushLog(state, elements.outputLog, 'Remote source linking placeholder — connect endpoint when ready.');
+    elements.remoteLinkButton.addEventListener('click', async () => {
+      elements.remoteLinkButton.disabled = true;
+      elements.remoteLinkButton.textContent = 'Connecting...';
+      
+      try {
+        pushLog(state, elements.outputLog, 'Connecting to backend to fetch example data...');
+        
+        const result = await exoScanAPI.getExampleData();
+        
+        if (result.success && result.data) {
+          // Create a new card with the example data
+          const exampleCard = {
+            id: buildObjectId(state.objectCounter + 1),
+            title: 'Example Data',
+            subtitle: 'From backend API',
+            notes: 'Sample exoplanet data loaded from backend',
+            features: result.data,
+            isTemplate: false
+          };
+          
+          state.cards.push(exampleCard);
+          state.objectCounter++;
+          
+          renderObjectGrid(elements.objectGrid, state.cards, elements.cardTemplate);
+          saveStoredState(state);
+          
+          pushLog(state, elements.outputLog, '✓ Example data loaded successfully and added to library');
+        } else {
+          throw new Error(result.error || 'No example data available');
+        }
+        
+      } catch (error) {
+        pushLog(state, elements.outputLog, '❌ Failed to load example data: ' + error.message);
+        console.error('Remote link error:', error);
+      } finally {
+        elements.remoteLinkButton.disabled = false;
+        elements.remoteLinkButton.textContent = 'Load example';
+      }
     });
   }
 
@@ -849,38 +888,113 @@
       return;
     }
 
-    elements.runButton.addEventListener('click', () => {
+    elements.runButton.addEventListener('click', async () => {
       // Provide immediate user feedback
       elements.runButton.disabled = true;
       elements.runButton.textContent = 'Processing...';
       
-      const summary = [];
-      if (state.runnerSelectionId) {
-        summary.push('Single object: ' + state.runnerSelectionId + '.');
-      } else {
-        summary.push('No card selected. Choose an object or upload a JSON override.');
-      }
+      try {
+        const summary = [];
+        let predictionResults = [];
 
-      if (state.uploads.single) {
-        summary.push('Single JSON: ' + state.uploads.single.name + '.');
-      }
+        // Determine what data to process
+        let dataToProcess = [];
+        
+        if (state.uploads.single) {
+          // Use uploaded single file data
+          summary.push('Processing single JSON: ' + state.uploads.single.name);
+          const fileResult = await exoScanAPI.processFileUpload(state.uploads.single.file, 'single');
+          
+          if (fileResult.success) {
+            dataToProcess.push(fileResult.data);
+          } else {
+            throw new Error('Failed to process single file: ' + fileResult.error);
+          }
+        } else if (state.runnerSelectionId) {
+          // Use selected card data
+          const selectedCard = state.cards.find(card => card.id === state.runnerSelectionId);
+          if (selectedCard) {
+            summary.push('Processing selected object: ' + state.runnerSelectionId);
+            dataToProcess.push(selectedCard.features);
+          } else {
+            throw new Error('Selected object not found');
+          }
+        }
 
-      if (state.uploads.bulk.length) {
-        summary.push('Bulk queue: ' + state.uploads.bulk.length + ' file' + (state.uploads.bulk.length === 1 ? '' : 's') + '.');
-      }
+        // Process bulk uploads
+        if (state.uploads.bulk.length > 0) {
+          summary.push(`Processing ${state.uploads.bulk.length} bulk file(s)`);
+          
+          for (const bulkFile of state.uploads.bulk) {
+            const fileResult = await exoScanAPI.processFileUpload(bulkFile.file, 'bulk');
+            if (fileResult.success) {
+              if (Array.isArray(fileResult.data)) {
+                dataToProcess.push(...fileResult.data);
+              } else {
+                dataToProcess.push(fileResult.data);
+              }
+            } else {
+              pushLog(state, elements.outputLog, `Warning: Failed to process ${bulkFile.name}: ${fileResult.error}`);
+            }
+          }
+        }
 
-      if (!state.uploads.single && !state.uploads.bulk.length) {
-        summary.push('No uploads staged yet.');
-      }
+        if (dataToProcess.length === 0) {
+          throw new Error('No valid data to process. Please select an object or upload files.');
+        }
 
-      summary.push('API call pending backend wiring.');
-      pushLog(state, elements.outputLog, summary.join(' '));
-      
-      // Reset button after a short delay to simulate processing
-      setTimeout(() => {
+        pushLog(state, elements.outputLog, summary.join('. ') + '. Starting predictions...');
+
+        // Make API calls for predictions
+        if (dataToProcess.length === 1) {
+          // Single prediction
+          const result = await exoScanAPI.predictSingle(dataToProcess[0]);
+          if (result.success) {
+            predictionResults.push(result.data);
+            pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
+          } else {
+            throw new Error('Prediction failed: ' + result.error);
+          }
+        } else {
+          // Batch predictions
+          pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects in batch...`);
+          const batchResult = await exoScanAPI.predictBatch(dataToProcess);
+          
+          if (batchResult.success) {
+            predictionResults = batchResult.data;
+            const successCount = predictionResults.filter(r => r.success).length;
+            pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${batchResult.totalProcessed} successful`);
+          } else {
+            throw new Error('Batch prediction failed: ' + batchResult.error);
+          }
+        }
+
+        // Display results
+        displayPredictionResults(predictionResults, elements, state);
+        
+        // Optional: Generate SHAP analysis for the first successful prediction
+        const firstSuccess = predictionResults.find(r => r.success);
+        if (firstSuccess && predictionResults.length === 1) {
+          pushLog(state, elements.outputLog, 'Generating SHAP explanation...');
+          try {
+            const shapResult = await exoScanAPI.generateSHAPAnalysis(firstSuccess.data);
+            if (shapResult.success) {
+              displaySHAPResults(shapResult.data, elements, state);
+              pushLog(state, elements.outputLog, 'SHAP analysis completed');
+            }
+          } catch (shapError) {
+            pushLog(state, elements.outputLog, 'SHAP analysis failed: ' + shapError.message);
+          }
+        }
+
+      } catch (error) {
+        pushLog(state, elements.outputLog, 'Error: ' + error.message);
+        console.error('Prediction error:', error);
+      } finally {
+        // Reset button
         elements.runButton.disabled = false;
         elements.runButton.textContent = 'Run classification';
-      }, 1500);
+      }
     });
   }
 
@@ -1454,6 +1568,104 @@
       row.textContent = '[' + time + '] ' + entry.message;
       container.appendChild(row);
     });
+  }
+
+  // Helper functions for API integration
+  function displayPredictionResults(results, elements, state) {
+    if (!results || results.length === 0) {
+      pushLog(state, elements.outputLog, '⚠ No prediction results to display');
+      return;
+    }
+
+    const successfulResults = results.filter(r => r.success);
+    const failedResults = results.filter(r => !r.success);
+
+    if (successfulResults.length > 0) {
+      pushLog(state, elements.outputLog, `📊 Prediction Results (${successfulResults.length} successful):`);
+      
+      successfulResults.forEach((result, index) => {
+        if (result.data && result.data.prediction !== undefined) {
+          const prediction = result.data.prediction;
+          const confidence = (prediction * 100).toFixed(1);
+          let classification = 'Unknown';
+          
+          // Map prediction to classification
+          if (prediction >= 0.7) {
+            classification = 'Confirmed Planet';
+          } else if (prediction >= 0.3) {
+            classification = 'Planet Candidate';
+          } else {
+            classification = 'False Positive';
+          }
+          
+          pushLog(state, elements.outputLog, `  ${index + 1}. ${classification} (${confidence}% confidence)`);
+        }
+      });
+    }
+
+    if (failedResults.length > 0) {
+      pushLog(state, elements.outputLog, `❌ Failed predictions: ${failedResults.length}`);
+      failedResults.forEach((result, index) => {
+        pushLog(state, elements.outputLog, `  ${index + 1}. Error: ${result.error || 'Unknown error'}`);
+      });
+    }
+  }
+
+  function displaySHAPResults(shapData, elements, state) {
+    if (!shapData) {
+      pushLog(state, elements.outputLog, '⚠ No SHAP data to display');
+      return;
+    }
+
+    if (shapData.feature_importance && Array.isArray(shapData.feature_importance)) {
+      pushLog(state, elements.outputLog, '🔍 Top feature importance:');
+      
+      // Get top 5 most important features
+      const features = shapData.feature_names || [];
+      const importance = shapData.feature_importance || [];
+      
+      const featureImportance = features.map((name, index) => ({
+        name,
+        importance: importance[index] || 0
+      })).sort((a, b) => b.importance - a.importance).slice(0, 5);
+
+      featureImportance.forEach((feature, index) => {
+        const importance = (feature.importance * 100).toFixed(1);
+        pushLog(state, elements.outputLog, `  ${index + 1}. ${feature.name}: ${importance}%`);
+      });
+    }
+
+    if (shapData.plots && shapData.plots.summary_plot) {
+      pushLog(state, elements.outputLog, '📈 SHAP visualization generated (check browser console for base64 data)');
+      console.log('SHAP Summary Plot (base64):', shapData.plots.summary_plot);
+    }
+  }
+
+  // Check backend status on page load
+  async function checkBackendStatus(elements, state) {
+    try {
+      const status = await exoScanAPI.getBackendStatus();
+      
+      if (status.success && status.online) {
+        pushLog(state, elements.outputLog, '✓ Backend connected and ready');
+        
+        // Display available capabilities
+        const capabilities = Object.entries(status.capabilities)
+          .filter(([_, available]) => available)
+          .map(([name, _]) => name)
+          .join(', ');
+        
+        if (capabilities) {
+          pushLog(state, elements.outputLog, `Available features: ${capabilities}`);
+        }
+      } else {
+        pushLog(state, elements.outputLog, '⚠ Backend offline - running in demo mode');
+        pushLog(state, elements.outputLog, 'Error: ' + (status.error || 'Connection failed'));
+      }
+    } catch (error) {
+      pushLog(state, elements.outputLog, '⚠ Could not check backend status - running in demo mode');
+      console.warn('Backend status check failed:', error);
+    }
   }
 
   if (document.readyState === 'loading') {

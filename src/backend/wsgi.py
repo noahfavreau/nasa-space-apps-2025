@@ -1,7 +1,9 @@
 import uuid
 from flask import Flask, jsonify, request, render_template, render_template_string
 import pandas as pd
-import shap_generator
+
+from preprocess import preprocess_api_input # from src/backend/preprocess.py
+from shap_generator import generate_shap_analysis # from src/backend/shap_generator.py
 
 app = Flask(__name__, template_folder="src/html")
 
