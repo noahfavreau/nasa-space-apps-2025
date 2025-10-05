@@ -1661,6 +1661,96 @@ body.architecture-page .section-heading p{
     justify-content: flex-end;
 }
 
+/* Required Features Table Styles */
+.required-features {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-md) 0;
+}
+
+.required-features h3 {
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-white);
+}
+
+.features-table-container {
+    overflow-x: auto;
+    border-radius: 18px;
+    background: rgba(18, 20, 38, 0.82);
+    border: 1px solid rgba(226, 193, 229, 0.22);
+    box-shadow: 0 18px 32px rgba(7, 6, 18, 0.55);
+}
+
+.features-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-primary);
+}
+
+.features-table thead {
+    background: rgba(14, 16, 32, 0.95);
+}
+
+.features-table th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    color: rgba(240, 220, 106, 0.9);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid rgba(226, 193, 229, 0.2);
+}
+
+.features-table tbody tr {
+    border-bottom: 1px solid rgba(226, 193, 229, 0.12);
+    transition: background-color 0.2s ease;
+}
+
+.features-table tbody tr:hover {
+    background: rgba(226, 193, 229, 0.05);
+}
+
+.features-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.features-table td {
+    padding: 14px 20px;
+    color: rgba(231, 239, 250, 0.85);
+    font-size: 0.95rem;
+    vertical-align: top;
+}
+
+.features-table td:first-child {
+    font-weight: 500;
+    color: rgba(231, 239, 250, 0.95);
+}
+
+.features-table td:last-child {
+    color: rgba(240, 220, 106, 0.7);
+    font-family: var(--font-secondary);
+    font-weight: 500;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .features-table-container {
+        border-radius: 12px;
+    }
+    
+    .features-table th,
+    .features-table td {
+        padding: 12px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .features-table th {
+        font-size: 0.8rem;
+    }
+}
+
 .dataset-runner{
     position: relative;
     padding: var(--spacing-xl) var(--spacing-sm) 0;
