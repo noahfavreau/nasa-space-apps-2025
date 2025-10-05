@@ -847,38 +847,53 @@
       elements.remoteLinkButton.textContent = 'Connecting...';
       
       try {
-        pushLog(state, elements.outputLog, 'Connecting to backend to fetch example data...');
+        pushLog(state, elements.outputLog, 'Connecting to backend to make prediction...');
         
-        const result = await exoScanAPI.getExampleData();
+        // Sample exoplanet data for prediction
+        const sampleData = {
+          "orbital_period": 365.25,
+          "stellar_radius": 1.0,
+          "rate_of_ascension": 12.0,
+          "declination": 45.0,
+          "transit_duration": 0.1,
+          "transit_depth": 0.01,
+          "planet_radius": 1.0,
+          "planet_temperature": 288.0,
+          "insolation_flux": 1361.0,
+          "stellar_temperature": 5778.0
+        };
+        
+        const result = await exoScanAPI.predictSingle(sampleData);
         
         if (result.success && result.data) {
-          // Create a new card with the example data
-          const exampleCard = {
+          // Create a new card with the prediction result
+          const predictionCard = {
             id: buildObjectId(state.objectCounter + 1),
-            title: 'Example Data',
+            title: 'Remote Prediction',
             subtitle: 'From backend API',
-            notes: 'Sample exoplanet data loaded from backend',
-            features: result.data,
+            notes: 'Prediction made with sample data from backend',
+            features: sampleData,
+            prediction: result.data,
             isTemplate: false
           };
           
-          state.cards.push(exampleCard);
+          state.cards.push(predictionCard);
           state.objectCounter++;
           
           renderObjectGrid(elements.objectGrid, state.cards, elements.cardTemplate);
           saveStoredState(state);
           
-          pushLog(state, elements.outputLog, '✓ Example data loaded successfully and added to library');
+          pushLog(state, elements.outputLog, '✓ Prediction completed successfully and added to library');
         } else {
-          throw new Error(result.error || 'No example data available');
+          throw new Error(result.error || 'Prediction failed');
         }
         
       } catch (error) {
-        pushLog(state, elements.outputLog, '❌ Failed to load example data: ' + error.message);
+        pushLog(state, elements.outputLog, '❌ Failed to make prediction: ' + error.message);
         console.error('Remote link error:', error);
       } finally {
         elements.remoteLinkButton.disabled = false;
-        elements.remoteLinkButton.textContent = 'Load example';
+        elements.remoteLinkButton.textContent = 'Make Prediction';
       }
     });
   }
