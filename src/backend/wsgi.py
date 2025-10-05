@@ -1,7 +1,7 @@
 import uuid
 from flask import Flask, jsonify, request, render_template, render_template_string
 import pandas as pd
-import shap
+import shap_generator
 
 app = Flask(__name__, template_folder="src/html")
 
@@ -48,8 +48,13 @@ def fillexample():
     """
     return jsonify(sample), 200
 
-@app.route("/api/get_report", methods=["GET"]):
-    
+
+@app.route("/api/report/shap", methods=["GET"])
+def generate_shap_graph():
+    shap_generator.generate_shap()
+    # POUR NOAH
+
+
 # Page: /about
 
 if __name__ == "__main__":
