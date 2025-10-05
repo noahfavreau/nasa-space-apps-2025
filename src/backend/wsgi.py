@@ -95,41 +95,42 @@ def generate_shap_graph():
     """
     Generate SHAP analysis for the provided exoplanet data
     """
+    
     try:
         data = request.get_json(silent=True)
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
-
-        if "insolation flux" in data:
-            data["insolation_flux"] = data.pop("insolation flux")
-
+        
+        # Validate required fields
         required_fields = [
             "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
             "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
             "insolation_flux", "stellar_temperature"
         ]
-
+        
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
-
+        
         X_inf = pd.DataFrame([data])
 
-        if not hasattr(model, "generate_meta_features"):
-            return jsonify({"error": "Model does not support meta-feature generation"}), 500
+        # --- FIX: Use a base model for SHAP, not the meta-model ---
+        # Example: Use first XGBoost fold
+        base_model = None
+        if hasattr(model, "base_models") and "xgboost" in model.base_models:
+            base_models = model.base_models["xgboost"]
+            if base_models and len(base_models) > 0:
+                base_model = base_models[0]
+        
+        if base_model is None:
+            return jsonify({"error": "No base model available for SHAP analysis"}), 500
 
-        meta_features = model.generate_meta_features(X_inf)
-
-        explainer = Explainer(model.meta_model, meta_features)
-        shap_values = explainer(meta_features)
-        shap_result = {
-            "meta_features": meta_features.columns.tolist(),
-            "shap_values": shap_values.values.tolist(),
-            "base_values": shap_values.base_values.tolist(),
-        }
-
-        return jsonify(shap_result), 200
-
+        # Run SHAP analysis on base model
+        from shap_generator import generate_shap_analysis
+        result = generate_shap_analysis(base_model, X_inf)
+        
+        return jsonify(result), 200
+        
     except Exception as e:
         return jsonify({
             "success": False,
