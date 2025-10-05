@@ -6,8 +6,8 @@ import inference
 from preprocess import preprocess_api_input  # from src/backend/preprocess.py
 from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
 from pathlib import Path
-from preprocess import preprocess_api_input 
-from shap_generator import generate_shap_analysis  
+from preprocess import preprocess_api_input
+from shap_generator import generate_shap_analysis
 from shap import Explainer
 
 
@@ -24,10 +24,11 @@ CORS(
 model = inference.load_classifier("../model")
 
 
-@app.route("/api/restart")
+@app.route("/api/restart", method=["GET"])
 def restart():
     p = Path("/tmp/reboot.txt")
     p.touch(exist_ok=True)
+    return {"a": True}
 
 
 @app.route("/", methods=["GET"])
@@ -113,7 +114,9 @@ def generate_shap_graph():
         X_inf = pd.DataFrame([data])
 
         if not hasattr(model, "generate_meta_features"):
-            return jsonify({"error": "Model does not support meta-feature generation"}), 500
+            return jsonify(
+                {"error": "Model does not support meta-feature generation"}
+            ), 500
 
         meta_features = model.generate_meta_features(X_inf)
 
