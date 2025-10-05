@@ -101,32 +101,24 @@ def generate_shap_graph():
             data["insolation_flux"] = data.pop("insolation flux")
 
         required_fields = [
-            "orbital_period",
-            "stellar_radius",
-            "rate_of_ascension",
-            "declination",
-            "transit_duration",
-            "transit_depth",
-            "planet_radius",
-            "planet_temperature",
-            "insolation_flux",
-            "stellar_temperature",
+            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+            "insolation_flux", "stellar_temperature"
         ]
-
 
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
-
         X_inf = pd.DataFrame([data])
+
         if not hasattr(model, "generate_meta_features"):
             return jsonify({"error": "Model does not support meta-feature generation"}), 500
+
         meta_features = model.generate_meta_features(X_inf)
 
         explainer = Explainer(model.meta_model, meta_features)
         shap_values = explainer(meta_features)
-
         shap_result = {
             "meta_features": meta_features.columns.tolist(),
             "shap_values": shap_values.values.tolist(),
@@ -136,9 +128,10 @@ def generate_shap_graph():
         return jsonify(shap_result), 200
 
     except Exception as e:
-        return jsonify(
-            {"success": False, "error": f"SHAP analysis failed: {str(e)}"}
-        ), 500
+        return jsonify({
+            "success": False,
+            "error": f"SHAP analysis failed: {str(e)}"
+        }), 500
 
 
 if __name__ == "__main__":
