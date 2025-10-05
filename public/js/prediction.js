@@ -887,7 +887,7 @@
         }
         
       } catch (error) {
-        pushLog(state, elements.outputLog, '❌ Prediction failed: ' + error.message);
+        pushLog(state, elements.outputLog, 'Prediction failed: ' + error.message);
         console.error('Prediction error:', error);
       } finally {
         elements.remoteLinkButton.disabled = false;
@@ -1674,7 +1674,7 @@
   // Helper functions for API integration
   function displayPredictionResults(results, elements, state) {
     if (!results || results.length === 0) {
-      pushLog(state, elements.outputLog, '⚠ No prediction results to display');
+      pushLog(state, elements.outputLog, 'No prediction results to display');
       return;
     }
 
@@ -1682,7 +1682,7 @@
     const failedResults = results.filter(r => !r.success);
 
     if (successfulResults.length > 0) {
-      pushLog(state, elements.outputLog, `📊 Prediction Results (${successfulResults.length} successful):`);
+      pushLog(state, elements.outputLog, `Prediction Results (${successfulResults.length} successful):`);
       
       // Display the first successful result in the UI
       const firstResult = successfulResults[0];
@@ -1699,7 +1699,7 @@
     }
 
     if (failedResults.length > 0) {
-      pushLog(state, elements.outputLog, `❌ Failed predictions: ${failedResults.length}`);
+      pushLog(state, elements.outputLog, `Failed predictions: ${failedResults.length}`);
       failedResults.forEach((result, index) => {
         pushLog(state, elements.outputLog, `  ${index + 1}. Error: ${result.error || 'Unknown error'}`);
       });
@@ -1795,15 +1795,15 @@
 
     // Log to console for debugging
     if (shapData.feature_importance && Array.isArray(shapData.feature_importance)) {
-      pushLog(state, elements.outputLog, '🔍 SHAP feature importance analysis completed');
+      pushLog(state, elements.outputLog, 'SHAP feature importance analysis completed');
     } else {
-      pushLog(state, elements.outputLog, '⚠ SHAP feature importance data not available');
+      pushLog(state, elements.outputLog, 'SHAP feature importance data not available');
     }
 
     // Display SHAP visualization plot if available
     if (shapData.plots && shapData.plots.summary_plot) {
       displaySHAPVisualization(shapData.plots.summary_plot, elements);
-      pushLog(state, elements.outputLog, '📈 SHAP visualization generated and displayed');
+      pushLog(state, elements.outputLog, 'SHAP visualization generated and displayed');
       console.log('SHAP Summary Plot (base64):', shapData.plots.summary_plot);
     }
 
@@ -1933,11 +1933,11 @@
           pushLog(state, elements.outputLog, `Available features: ${capabilities}`);
         }
       } else {
-        pushLog(state, elements.outputLog, '⚠ Backend offline - running in demo mode');
+        pushLog(state, elements.outputLog, 'Backend offline - running in demo mode');
         pushLog(state, elements.outputLog, 'Error: ' + (status.error || 'Connection failed'));
       }
     } catch (error) {
-      pushLog(state, elements.outputLog, '⚠ Could not check backend status - running in demo mode');
+      pushLog(state, elements.outputLog, 'Could not check backend status - running in demo mode');
       console.warn('Backend status check failed:', error);
     }
   }
