@@ -5,11 +5,25 @@ import pandas as pd
 import inference
 from preprocess import preprocess_api_input  # from src/backend/preprocess.py
 from shap_generator import generate_shap_analysis  # from src/backend/shap_generator.py
+from pathlib import Path
 
 app = Flask(__name__, template_folder="src/html")
-CORS(app, origins=['https://www.bottomlessswag.tech', 'http://localhost:3000', 'http://127.0.0.1:3000'])
+CORS(
+    app,
+    origins=[
+        "https://www.bottomlessswag.tech",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
+)
 
 model = inference.load_classifier("../model")
+
+
+@app.route("/api/restart")
+def restart():
+    p = Path("/tmp/reboot.txt")
+    p.touch(exist_ok=True)
 
 
 @app.route("/", methods=["GET"])
@@ -76,18 +90,25 @@ def generate_shap_graph():
         data = request.get_json(silent=True)
         if data is None:
             return jsonify({"error": "Invalid or missing JSON"}), 400
-        
+
         # Validate required fields
         required_fields = [
-            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
-            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
-            "insolation_flux", "stellar_temperature"
+            "orbital_period",
+            "stellar_radius",
+            "rate_of_ascension",
+            "declination",
+            "transit_duration",
+            "transit_depth",
+            "planet_radius",
+            "planet_temperature",
+            "insolation_flux",
+            "stellar_temperature",
         ]
-        
+
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
-        
+
         X_inf = pd.DataFrame([data])
 
         # --- FIX: Use a base model for SHAP, not the meta-model ---
@@ -97,21 +118,21 @@ def generate_shap_graph():
             base_models = model.base_models["xgboost"]
             if base_models and len(base_models) > 0:
                 base_model = base_models[0]
-        
+
         if base_model is None:
             return jsonify({"error": "No base model available for SHAP analysis"}), 500
 
         # Run SHAP analysis on base model
         from shap_generator import generate_shap_analysis
+
         result = generate_shap_analysis(base_model, X_inf)
-        
+
         return jsonify(result), 200
-        
+
     except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": f"SHAP analysis failed: {str(e)}"
-        }), 500
+        return jsonify(
+            {"success": False, "error": f"SHAP analysis failed: {str(e)}"}
+        ), 500
 
 
 if __name__ == "__main__":
