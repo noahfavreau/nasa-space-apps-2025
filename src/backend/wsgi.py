@@ -59,14 +59,15 @@ def preditiondata():
         "transit_depth",
         "planet_radius",
         "planet_temperature",
-        "insolation_flux",
+        "insolation flux",
         "stellar_temperature",
     ]:
         if i not in data:
             return jsonify({"error": "Missing data in JSON"}), 400
 
-    if "insolation flux" in data:
-        data["insolation_flux"] = data.pop("insolation flux")
+    # Map "insolation_flux" to "insolation flux" for API compatibility
+    if "insolation_flux" in data:
+        data["insolation flux"] = data.pop("insolation_flux")
 
     return jsonify(model.predict_from_raw_features(list(data.values()))), 200
 
@@ -111,13 +112,13 @@ def generate_shap_graph():
             "transit_depth",
             "planet_radius",
             "planet_temperature",
-            "insolation_flux",
+            "insolation flux",
             "stellar_temperature",
         ]
 
-        # Map "insolation flux" to "insolation_flux" if necessary
-        if "insolation flux" in data:
-            data["insolation_flux"] = data.pop("insolation flux")
+        # Map "insolation_flux" to "insolation flux" if necessary for API compatibility
+        if "insolation_flux" in data:
+            data["insolation flux"] = data.pop("insolation_flux")
 
         for field in required_fields:
             if field not in data:
