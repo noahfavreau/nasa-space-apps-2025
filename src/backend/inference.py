@@ -69,8 +69,16 @@ class ExoplanetClassifier:
         self.base_models = self._load_base_models()
         self.scaler = None  # scaler will be set if needed for TabNet
         
+        # Define the original feature names
+        self.feature_names = [
+            'orbital_period', 'stellar_radius', 'rate_of_ascension', 'declination',
+            'transit_duration', 'transit_depth', 'planet_radius', 'planet_temperature',
+            'insolation_flux', 'stellar_temperature'
+        ]
+        
         print(f"Loaded {len(self.base_models)} base models and meta-model") # print information about the loaded models
         print("Available model types:", list(self.base_models.keys()))
+        print("Original features:", self.feature_names)
     
     def _load_best_params(self) -> Dict[str, Any]:
         """this method load the best parameters for each model type."""
@@ -103,9 +111,9 @@ class ExoplanetClassifier:
             for i in range(1, 11):
                 model_path = os.path.join(self.model_dir, "lightgbm", f"fold_{i}.txt")
                 if os.path.exists(model_path):
-                    model = LGBMClassifier()
-                    model.booster_ = lgb.Booster(model_file=model_path)
-                    models['lightgbm'].append(model)
+                    # Load the booster directly
+                    booster = lgb.Booster(model_file=model_path)
+                    models['lightgbm'].append(booster)
         
         # load XGBoost model
         if xgb is not None:
@@ -144,7 +152,7 @@ class ExoplanetClassifier:
         for model_type, models in self.base_models.items(): # run all base models on input
             for model in models:
                 if model_type == 'lightgbm':
-                    # lightgbm
+                    # lightgbm booster
                     pred = model.predict(X)
                 elif model_type == 'tabnet':
                     # tabnet
@@ -159,21 +167,28 @@ class ExoplanetClassifier:
     
     def _get_base_probabilities(self, X: np.ndarray) -> np.ndarray:
         """
-        Get probabilities and return array with prob for each base model
+        Get probabilities and return array with averaged probabilities for each model type
         
         Args:
             X: features
             
         Returns:
-            Array of shape (n_samples, n_models * n_classes) with probabilities
+            Array of shape (n_samples, 12) with averaged probabilities from each model type
         """
-        all_probabilities = []
+        model_type_probabilities = {}
         
         for model_type, models in self.base_models.items():
+            type_probs = []
+            
             for model in models:
                 if model_type == 'lightgbm':
-                    # lightgbm
-                    prob = model.predict_proba(X)
+                    # lightgbm booster - get probabilities directly
+                    prob = model.predict(X, num_iteration=model.best_iteration, pred_leaf=False, pred_contrib=False)
+                    # LightGBM booster returns probabilities for multiclass
+                    if prob.ndim == 1:
+                        # Binary case, convert to 3-class
+                        prob = np.column_stack([1-prob, prob, np.zeros_like(prob)])
+                    # If already 3-class, use as is
                 elif model_type == 'tabnet':
                     # tabnet
                     prob = model.predict_proba(X)
@@ -181,8 +196,14 @@ class ExoplanetClassifier:
                     # catboost and xgboost
                     prob = model.predict_proba(X)
 
-                all_probabilities.append(prob)
-        return np.hstack(all_probabilities)
+                type_probs.append(prob)
+            
+            # Average probabilities across all folds for this model type
+            model_type_probabilities[model_type] = np.mean(type_probs, axis=0)
+        
+        # Concatenate averaged probabilities from all model types
+        # 4 model types × 3 classes = 12 features
+        return np.hstack([model_type_probabilities[model_type] for model_type in ['catboost', 'lightgbm', 'xgboost', 'tabnet']])
     
     def predict(self, X: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
         """
@@ -228,7 +249,8 @@ class ExoplanetClassifier:
         Make a prediction for a single celestial object.
         
         Args:
-            features: Feature vector for a single object
+            features: Feature vector for a single object (10 raw features or 12 meta-features)
+            
         Returns:
             Dictionary with prediction results
         """
@@ -255,6 +277,74 @@ class ExoplanetClassifier:
         
         return result
     
+    def predict_from_raw_features(self, raw_features: Union[List, np.ndarray, pd.Series]) -> Dict[str, Any]:
+        """
+        Make prediction from the raw astronomical values.
+        
+        Args:
+            raw_features: raw features in order:
+                [orbital_period, stellar_radius, rate_of_ascension, declination,
+                 transit_duration, transit_depth, planet_radius, planet_temperature,
+                 insolation_flux, stellar_temperature]
+        Returns:
+            Dictionary with prediction results
+        """
+        if isinstance(raw_features, (list, pd.Series)):
+            raw_features = np.array(raw_features).reshape(1, -1)
+        elif raw_features.ndim == 1:
+            raw_features = raw_features.reshape(1, -1)
+        
+        # checking we have 10 features
+        if raw_features.shape[1] != 10:
+            raise ValueError(f"Expected 10 raw features, got {raw_features.shape[1]}")
+        
+        # generate meta-features from base models
+        meta_features = self._get_base_probabilities(raw_features)
+        
+        # final prediction from meta-model
+        prediction = self.meta_model.predict(meta_features)[0]
+        probabilities = self.meta_model.predict_proba(meta_features)[0]
+        
+        # class numbers to labels
+        class_labels = {0: "Exoplanet", 1: "Uncertain", 2: "Not Exoplanet"}
+        
+        result = {
+            "predicted_class": int(prediction),
+            "predicted_label": class_labels[prediction],
+            "probabilities": {
+                class_labels[i]: float(prob) for i, prob in enumerate(probabilities)
+            },
+            "confidence": float(max(probabilities)),
+            "meta_features": meta_features[0].tolist()  # Include the generated meta-features
+        }
+        
+        return result
+    
+    def predict_batch_from_raw_features(self, raw_features: Union[np.ndarray, pd.DataFrame]) -> np.ndarray:
+        """
+        Make batch predictions from raw astronomical features (10 features).
+        
+        Args:
+            raw_features: Raw astronomical features array of shape (n_samples, 10)
+            
+        Returns:
+            Array of predicted classes
+        """
+        if isinstance(raw_features, pd.DataFrame):
+            raw_features = raw_features.values
+        
+        # Check if we have 10 features
+        if raw_features.shape[1] != 10:
+            raise ValueError(f"Expected 10 raw features, got {raw_features.shape[1]}")
+        
+        # Get meta-features from base models
+        meta_features = self._get_base_probabilities(raw_features)
+        
+        # Get final predictions from meta-model
+        predictions = self.meta_model.predict(meta_features)
+        
+        return predictions
+    
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the loaded models."""
         info = {
@@ -268,6 +358,7 @@ class ExoplanetClassifier:
                 "count": len(models),
                 "parameters": self.best_params.get(model_type, {})
             }
+        
         return info
 
 
@@ -281,4 +372,51 @@ def load_classifier(model_dir: str = ".") -> ExoplanetClassifier:
         ExoplanetClassifier instance
     """
     return ExoplanetClassifier(model_dir)
+
+
+# example usage
+if __name__ == "__main__":
+    # Load the classifier
+    classifier = load_classifier()
+    
+    print("="*60)
+    print("TESTING WITH RAW ASTRONOMICAL FEATURES")
+    print("="*60)
+    
+    raw_features = np.array([ # made up values
+        365.25,    # orbital_period (days)
+        1.0,       # stellar_radius (solar radii)
+        0.1,       # rate_of_ascension (arcsec/year)
+        0.0,       # declination (degrees)
+        13.0,      # transit_duration (hours)
+        0.01,      # transit_depth (fraction)
+        1.0,       # planet_radius (Earth radii)
+        288.0,     # planet_temperature (K)
+        1361.0,    # insolation_flux (W/m²)
+        5778.0     # stellar_temperature (K)
+    ])
+    
+    print("Raw features:")
+    for i, (name, value) in enumerate(zip(classifier.feature_names, raw_features)):
+        print(f"  {name}: {value}")
+    
+    print("\n" + "-"*40)
+    print("Making prediction from raw features...")
+    
+    try:
+        # Use the new method for raw features
+        result = classifier.predict_from_raw_features(raw_features)
+        
+        print(f"Prediction: {result['predicted_label']}")
+        print(f"Confidence: {result['confidence']:.3f}")
+        print("Probabilities:")
+        for label, prob in result['probabilities'].items():
+            print(f"  {label}: {prob:.3f}")
+        
+        print(f"\nGenerated meta-features: {len(result['meta_features'])} features")
+        print("Meta-features:", [f"{x:.3f}" for x in result['meta_features']])
+        
+    except Exception as e:
+        print(f"Error: {e}")
+    
 
