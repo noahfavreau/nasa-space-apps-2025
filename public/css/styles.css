@@ -2640,6 +2640,46 @@ body.prediction-page.is-inspector-open{
     font-weight: 600;
 }
 
+/* SHAP Plot Visualization */
+.shap-plot-container {
+    margin-top: 24px;
+    margin-bottom: 20px;
+}
+
+.shap-plot-container h4 {
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+.shap-plot-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: var(--color-white);
+    padding: 16px;
+    margin-top: 12px;
+    display: block;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shap-plot-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.shap-plot-error {
+    padding: 16px;
+    background: var(--color-dark-gray);
+    border-radius: 8px;
+    color: var(--color-warning);
+    text-align: center;
+    margin-top: 12px;
+    border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
 /* Animation for results appearing */
 .output-panel {
     animation: fadeInUp 0.6s ease-out;

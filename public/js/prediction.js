@@ -1800,8 +1800,10 @@
       pushLog(state, elements.outputLog, '⚠ SHAP feature importance data not available');
     }
 
+    // Display SHAP visualization plot if available
     if (shapData.plots && shapData.plots.summary_plot) {
-      pushLog(state, elements.outputLog, '📈 SHAP visualization generated (check browser console for base64 data)');
+      displaySHAPVisualization(shapData.plots.summary_plot, elements);
+      pushLog(state, elements.outputLog, '📈 SHAP visualization generated and displayed');
       console.log('SHAP Summary Plot (base64):', shapData.plots.summary_plot);
     }
 
@@ -1837,6 +1839,80 @@
       `;
       importanceList.appendChild(importanceItem);
     });
+  }
+
+  // Display SHAP visualization plot
+  function displaySHAPVisualization(base64Plot, elements) {
+    // Find or create a container for the SHAP plot
+    let shapPlotContainer = document.getElementById('shap-plot-container');
+    
+    if (!shapPlotContainer) {
+      // Create the container if it doesn't exist
+      shapPlotContainer = document.createElement('div');
+      shapPlotContainer.id = 'shap-plot-container';
+      shapPlotContainer.className = 'shap-plot-container';
+      
+      // Add a title
+      const plotTitle = document.createElement('h4');
+      plotTitle.textContent = 'SHAP Feature Importance Visualization';
+      plotTitle.style.color = 'var(--color-primary)';
+      plotTitle.style.marginBottom = '12px';
+      shapPlotContainer.appendChild(plotTitle);
+      
+      // Insert the container after the feature importance section
+      const featureImportanceSection = document.getElementById('feature-importance');
+      if (featureImportanceSection && featureImportanceSection.parentNode) {
+        featureImportanceSection.parentNode.insertBefore(shapPlotContainer, featureImportanceSection.nextSibling);
+      }
+    }
+
+    // Remove any existing plot image
+    const existingImg = shapPlotContainer.querySelector('.shap-plot-image');
+    if (existingImg) {
+      existingImg.remove();
+    }
+
+    // Create and add the new plot image
+    const plotImage = document.createElement('img');
+    plotImage.className = 'shap-plot-image';
+    plotImage.src = `data:image/png;base64,${base64Plot}`;
+    plotImage.alt = 'SHAP Feature Importance Plot';
+    plotImage.style.cssText = `
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      background: var(--color-white);
+      padding: 16px;
+      margin-top: 12px;
+    `;
+
+    // Add error handling for image loading
+    plotImage.onerror = function() {
+      console.error('Failed to load SHAP plot image');
+      this.alt = 'Error loading SHAP plot visualization';
+      this.style.display = 'none';
+      
+      // Show an error message instead
+      const errorMsg = document.createElement('div');
+      errorMsg.className = 'shap-plot-error';
+      errorMsg.style.cssText = `
+        padding: 16px;
+        background: var(--color-dark-gray);
+        border-radius: 8px;
+        color: var(--color-warning);
+        text-align: center;
+        margin-top: 12px;
+      `;
+      errorMsg.textContent = 'Error displaying SHAP visualization';
+      shapPlotContainer.appendChild(errorMsg);
+    };
+
+    plotImage.onload = function() {
+      console.log('SHAP plot visualization loaded successfully');
+    };
+
+    shapPlotContainer.appendChild(plotImage);
   }
 
   // Check backend status on page load
