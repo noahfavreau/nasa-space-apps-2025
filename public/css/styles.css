@@ -45,6 +45,12 @@ body {
     --color-primary: #E2C1E5;
     --color-primary-dark: #8C5DB1;
     --color-secondary: #F0DC6A;
+    --color-success: #4CAF50;
+    --color-warning: #FF9800;
+    --color-danger: #F44336;
+    --color-exoplanet: #4CAF50;
+    --color-uncertain: #FF9800;
+    --color-not-exoplanet: #F44336;
 }
   
 /* ==========================================================================
@@ -2438,5 +2444,243 @@ body.prediction-page.is-inspector-open{
     .dataset-option__controls .button,
     .dataset-option__controls .file-picker{
         width: 100%;
+    }
+}
+
+/* ==========================================================================
+   LOADING ANIMATION & PREDICTION RESULTS
+   ========================================================================== */
+
+/* Loading Spinner */
+.loading-spinner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.button:disabled .button-text {
+    opacity: 0;
+}
+
+.button:disabled .loading-spinner {
+    display: flex !important;
+}
+
+/* Prediction Results */
+.prediction-card {
+    background: rgba(226, 193, 229, 0.1);
+    border: 1px solid rgba(226, 193, 229, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+}
+
+.prediction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.prediction-label {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-white);
+    margin: 0;
+}
+
+.confidence-score {
+    text-align: center;
+}
+
+.confidence-value {
+    display: block;
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.confidence-label {
+    font-size: 0.8em;
+    color: var(--color-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.class-probabilities {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.probability-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.class-name {
+    min-width: 120px;
+    font-weight: 500;
+    color: var(--color-white);
+}
+
+.bar-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+}
+
+.bar {
+    height: 24px;
+    border-radius: 12px;
+    transition: width 0.8s ease-in-out;
+    position: relative;
+    overflow: hidden;
+}
+
+.bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.exoplanet-bar {
+    background: linear-gradient(90deg, var(--color-exoplanet), #66BB6A);
+}
+
+.uncertain-bar {
+    background: linear-gradient(90deg, var(--color-uncertain), #FFB74D);
+}
+
+.not-exoplanet-bar {
+    background: linear-gradient(90deg, var(--color-danger), #EF5350);
+}
+
+.probability-value {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 600;
+    color: var(--color-white);
+}
+
+/* SHAP Results */
+.shap-container {
+    margin-top: 16px;
+}
+
+.shap-summary {
+    background: rgba(226, 193, 229, 0.1);
+    border: 1px solid rgba(226, 193, 229, 0.2);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-importance h4 {
+    color: var(--color-white);
+    margin-bottom: 16px;
+    font-size: 1.1em;
+}
+
+.importance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.importance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(226, 193, 229, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid var(--color-primary);
+}
+
+.importance-item .feature-name {
+    color: var(--color-white);
+    font-weight: 500;
+}
+
+.importance-item .importance-value {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Animation for results appearing */
+.output-panel {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .prediction-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+    }
+    
+    .probability-bar {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+    }
+    
+    .class-name {
+        min-width: auto;
+        text-align: center;
+    }
+    
+    .bar-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .probability-value {
+        text-align: center;
     }
 }
