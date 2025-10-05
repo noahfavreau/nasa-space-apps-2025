@@ -17,6 +17,8 @@ import json
 import os
 from typing import Union, List, Dict, Any
 import warnings
+from preprocess import preprocess_for_prediction
+
 warnings.filterwarnings('ignore')
 
 # Model imports
@@ -264,7 +266,7 @@ class ExoplanetClassifier:
         probabilities = self.predict_proba(features)[0]
         
         # Map class numbers to labels
-        class_labels = {0: "Not Exoplanet", 1: "Exoplanet", 2: "Uncertain"}
+        class_labels = {0: "Exoplanet", 1: "Uncertain", 2: "Not Exoplanet"}
         
         result = {
             "predicted_class": int(prediction),
@@ -294,7 +296,7 @@ class ExoplanetClassifier:
         elif raw_features.ndim == 1:
             raw_features = raw_features.reshape(1, -1)
         
-        # checking we have 10 features
+        # checking there's 10 features
         if raw_features.shape[1] != 10:
             raise ValueError(f"Expected 10 raw features, got {raw_features.shape[1]}")
         
@@ -333,14 +335,14 @@ class ExoplanetClassifier:
         if isinstance(raw_features, pd.DataFrame):
             raw_features = raw_features.values
         
-        # Check if we have 10 features
+        # make sure there are 10 features
         if raw_features.shape[1] != 10:
             raise ValueError(f"Expected 10 raw features, got {raw_features.shape[1]}")
         
-        # Get meta-features from base models
+        # meta features from base model
         meta_features = self._get_base_probabilities(raw_features)
         
-        # Get final predictions from meta-model
+        # final predictions from meta-model
         predictions = self.meta_model.predict(meta_features)
         
         return predictions
@@ -375,37 +377,49 @@ def load_classifier(model_dir: str = ".") -> ExoplanetClassifier:
 
 
 # example usage
-if __name__ == "__main__":
+if __name__ == "__main__":    
     # Load the classifier
     classifier = load_classifier()
     
     print("="*60)
     print("TESTING WITH RAW ASTRONOMICAL FEATURES")
     print("="*60)
+    test_data = {
+        'period': 365.25,           # orbital_period (days)
+        'star_radius': 1.0,         # stellar_radius (solar radii)
+        'ra': 291.93,               # rate_of_ascension (degrees)
+        'dec': 48.14,               # declination (degrees)
+        'duration': 13.0,           # transit_duration (hours)
+        'depth': 0.01,              # transit_depth (fraction)
+        'planet_radius': 1.0,       # planet_radius (Earth radii)
+        'planet_temp': 288.0,       # planet_temperature (K)
+        'insolation': 1361.0,       # insolation_flux (W/m²)
+        'star_temp': 5778.0         # stellar_temperature (K)
+    }
     
-    raw_features = np.array([ # made up values
-        365.25,    # orbital_period (days)
-        1.0,       # stellar_radius (solar radii)
-        0.1,       # rate_of_ascension (arcsec/year)
-        0.0,       # declination (degrees)
-        13.0,      # transit_duration (hours)
-        0.01,      # transit_depth (fraction)
-        1.0,       # planet_radius (Earth radii)
-        288.0,     # planet_temperature (K)
-        1361.0,    # insolation_flux (W/m²)
-        5778.0     # stellar_temperature (K)
-    ])
-    
-    print("Raw features:")
-    for i, (name, value) in enumerate(zip(classifier.feature_names, raw_features)):
-        print(f"  {name}: {value}")
+    print("Raw input data:")
+    for key, value in test_data.items():
+        print(f"  {key}: {value}")
     
     print("\n" + "-"*40)
-    print("Making prediction from raw features...")
+    print("Preprocessing data...")
     
     try:
-        # Use the new method for raw features
-        result = classifier.predict_from_raw_features(raw_features)
+        processed_data = preprocess_for_prediction(test_data)
+        print("Preprocessed features:")
+        print(processed_data)
+        
+        # Extract just the feature values (without disposition if present)
+        feature_columns = [col for col in processed_data.columns if col != 'disposition']
+        features = processed_data[feature_columns].values[0]
+        
+        print(f"\nExtracted features: {features}")
+        print(f"Feature count: {len(features)}")
+        
+        print("\n" + "-"*40)
+        print("Making prediction...")
+        
+        result = classifier.predict_from_raw_features(features)
         
         print(f"Prediction: {result['predicted_label']}")
         print(f"Confidence: {result['confidence']:.3f}")
@@ -418,5 +432,5 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error: {e}")
-    
-
+        import traceback
+        traceback.print_exc()
