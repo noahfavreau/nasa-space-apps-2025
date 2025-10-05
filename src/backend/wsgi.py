@@ -63,7 +63,7 @@ def preditiondata():
         "stellar_temperature",
     ]:
         if i not in data:
-            return jsonify({"error": "Missing data in JSON"}), 400
+            return jsonify({"error": "Missing data in JSON", "Missing": i}), 400
 
     # Map "insolation_flux" to "insolation flux" for API compatibility
     if "insolation_flux" in data:
