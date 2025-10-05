@@ -50,7 +50,13 @@ def preditiondata():
     data = request.get_json(silent=True)
     if data is None:
         return jsonify({"error": "Invalid or missing JSON"}), 400
-    for i in [
+
+    # Map "insolation_flux" to "insolation flux" for API compatibility FIRST
+    if "insolation_flux" in data:
+        data["insolation flux"] = data.pop("insolation_flux")
+
+    # Now validate that all required fields are present
+    required_fields = [
         "orbital_period",
         "stellar_radius",
         "rate_of_ascension",
@@ -61,13 +67,15 @@ def preditiondata():
         "planet_temperature",
         "insolation flux",
         "stellar_temperature",
-    ]:
-        if i not in data:
-            return jsonify({"error": "Missing data in JSON"}), 400
-
-    # Map "insolation_flux" to "insolation flux" for API compatibility
-    if "insolation_flux" in data:
-        data["insolation flux"] = data.pop("insolation_flux")
+    ]
+    
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({
+            "error": "Missing data in JSON", 
+            "missing_fields": missing_fields,
+            "hint": "Use 'insolation_flux' (underscore) or 'insolation flux' (space)"
+        }), 400
 
     return jsonify(model.predict_from_raw_features(list(data.values()))), 200
 
