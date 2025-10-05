@@ -10,7 +10,7 @@ app = Flask(__name__, template_folder="src/html")
 
 @app.route("/", methods=["GET"])
 def main_route():
-    return 1
+    return jsonify({"id": "1"})
 
 
 # API: /api/prediction/preditiondata
