@@ -16,7 +16,7 @@ scipy==1.16.2
 scikit-learn==1.7.2
 xgboost==3.0.5
 lightgbm==4.5.0
-catboost==1.2.7
+catboost==1.2.8
 pytorch-tabnet==4.1.0
 optuna==4.1.0
 
