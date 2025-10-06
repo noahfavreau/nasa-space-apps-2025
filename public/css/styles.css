@@ -129,6 +129,10 @@ p {
     font-family: var(--font-primary) !important;
     margin: 0;
 }
+
+ul {
+    padding-inline-start: 0 !important;
+}
   
 /* ==========================================================================
     WRAPPER / ELEMENT
