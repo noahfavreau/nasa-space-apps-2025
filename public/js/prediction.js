@@ -848,7 +848,7 @@
     }
 
     elements.bulkDownloadButton.addEventListener('click', async () => {
-      if (!state.bulkResults || state.uploads.bulk.length === 0) {
+      if (!state.bulkResults || !state.bulkResults.predictions || state.bulkResults.predictions.length === 0) {
         pushLog(state, elements.outputLog, 'No bulk results available for download.');
         return;
       }
@@ -857,35 +857,38 @@
         elements.bulkDownloadButton.disabled = true;
         elements.bulkDownloadButton.textContent = 'Preparing download...';
 
-        // Use the first bulk file for processing (simple implementation)
-        const firstBulkFile = state.uploads.bulk[0];
-        if (!firstBulkFile) {
-          throw new Error('No bulk file available');
-        }
+        pushLog(state, elements.outputLog, 'Generating CSV download...');
 
-        pushLog(state, elements.outputLog, `Generating CSV download for ${firstBulkFile.name}...`);
+        // Create CSV content from results
+        const predictions = state.bulkResults.predictions;
+        let csvContent = 'name,prediction,confidence,prediction_class\n';
+        
+        predictions.forEach((pred, index) => {
+          const name = pred.name || `Object_${index + 1}`;
+          const prediction = pred.prediction || 'Unknown';
+          const confidence = pred.confidence || 0;
+          const predictionClass = pred.prediction_class || 'Unknown';
+          
+          csvContent += `"${name}","${prediction}",${confidence},"${predictionClass}"\n`;
+        });
 
-        // Request CSV download from the API
-        const result = await exoScanAPI.predictBulkFile(firstBulkFile.file, true, true); // download = true
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'bulk_predictions.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
 
-        if (result.success) {
-          // Create download link
-          const url = window.URL.createObjectURL(result.data);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = result.filename || 'bulk_predictions.csv';
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+        pushLog(state, elements.outputLog, `✓ CSV file downloaded: bulk_predictions.csv`);
 
-          pushLog(state, elements.outputLog, `✓ Download started: ${a.download}`);
-        } else {
-          throw new Error(result.error);
-        }
       } catch (error) {
         pushLog(state, elements.outputLog, `✗ Download failed: ${error.message}`);
+        console.error('Download error:', error);
       } finally {
         elements.bulkDownloadButton.disabled = false;
         elements.bulkDownloadButton.textContent = 'Download Results';
@@ -1151,6 +1154,22 @@
 
         // Display results
         displayPredictionResults(predictionResults, elements, state);
+        
+        // Store bulk results for download and enable download button
+        if (predictionResults.length > 0) {
+          state.bulkResults = {
+            predictions: predictionResults.filter(r => r.success).map(r => r.data),
+            total_processed: predictionResults.length,
+            successful: predictionResults.filter(r => r.success).length,
+            failed: predictionResults.filter(r => !r.success).length
+          };
+          
+          // Enable download button
+          if (elements.bulkDownloadButton) {
+            elements.bulkDownloadButton.disabled = false;
+          }
+        }
+        
         pushLog(state, elements.outputLog, summary.join('. ') + '. Bulk processing completed.');
 
       } catch (error) {
