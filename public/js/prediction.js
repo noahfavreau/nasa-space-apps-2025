@@ -21,7 +21,8 @@
       bulkUploadList: document.querySelector('[data-upload-list="bulk"]'),
       bulkDownloadButton: document.querySelector('[data-action="download-bulk"]'),
       remoteLinkButton: document.querySelector('[data-action="link-remote"]'),
-      runButton: document.querySelector('[data-action="run-prediction"]'),
+      runSingleButton: document.querySelector('[data-action="run-single-prediction"]'),
+      runBulkButton: document.querySelector('[data-action="run-bulk-prediction"]'),
       outputLog: document.querySelector('[data-output-log]'),
       objectLibrarySection: document.getElementById('object-library'),
       inspector: document.querySelector('[data-object-inspector]'),
@@ -102,7 +103,8 @@
     initBulkUpload(elements, state);
     initBulkListRemoval(elements, state);
     initBulkDownload(elements, state);
-    initRunAction(elements, state);
+    initRunSingleAction(elements, state);
+    initRunBulkAction(elements, state);
     initRemoteLink(elements, state);
 
     // Check backend status after initialization
@@ -950,146 +952,81 @@
     });
   }
 
-  function initRunAction(elements, state) {
-    if (!elements.runButton) {
+  function initRunSingleAction(elements, state) {
+    if (!elements.runSingleButton) {
       return;
     }
 
-    elements.runButton.addEventListener('click', async () => {
+    elements.runSingleButton.addEventListener('click', async () => {
       // Provide immediate user feedback
-      elements.runButton.disabled = true;
+      elements.runSingleButton.disabled = true;
       
       // Show loading animation
-      const buttonText = elements.runButton.querySelector('.button-text');
-      const loadingSpinner = elements.runButton.querySelector('.loading-spinner');
+      const buttonText = elements.runSingleButton.querySelector('.button-text');
+      const loadingSpinner = elements.runSingleButton.querySelector('.loading-spinner');
       if (buttonText) buttonText.style.display = 'none';
       if (loadingSpinner) loadingSpinner.style.display = 'flex';
       
       try {
         const summary = [];
         let predictionResults = [];
-        let hasBulkData = false;
+        let rawDataForSHAP = null;
 
-        // Check if we have bulk uploads first
-        if (state.uploads.bulk.length > 0) {
-          hasBulkData = true;
-          summary.push(`Processing ${state.uploads.bulk.length} bulk file(s)`);
+        // Only process single data
+        let dataToProcess = [];
+        
+        if (state.uploads.single) {
+          // Use uploaded single file data
+          summary.push('Processing single JSON: ' + state.uploads.single.name);
+          const fileResult = await exoScanAPI.processFileUpload(state.uploads.single.file, 'single');
           
-          for (const bulkFile of state.uploads.bulk) {
-            pushLog(state, elements.outputLog, `Processing bulk file: ${bulkFile.name}`);
-            
-            // Use the new bulk API endpoint
-            const fileResult = await exoScanAPI.predictBulkFile(bulkFile.file, true); // has_raw_features = true
-            
-            if (fileResult.success) {
-              // Extract predictions from the bulk result
-              const predictions = fileResult.data.data.predictions || [];
-              const statistics = fileResult.data.data.statistics || {};
-              
-              pushLog(state, elements.outputLog, `✓ Bulk file processed: ${predictions.length} predictions generated`);
-              pushLog(state, elements.outputLog, `Statistics: ${JSON.stringify(statistics)}`);
-              
-              // Store bulk results for download
-              state.bulkResults = fileResult.data;
-              
-              // Enable download button
-              if (elements.bulkDownloadButton) {
-                elements.bulkDownloadButton.disabled = false;
-              }
-              
-              // Add all predictions to results
-              predictions.forEach(pred => {
-                predictionResults.push({ success: true, data: pred });
-              });
-            } else {
-              pushLog(state, elements.outputLog, `✗ Failed to process ${bulkFile.name}: ${fileResult.error}`);
-            }
+          if (fileResult.success) {
+            dataToProcess.push(fileResult.data);
+            rawDataForSHAP = fileResult.data;
+          } else {
+            throw new Error('Failed to process single file: ' + fileResult.error);
+          }
+        } else if (state.runnerSelectionId) {
+          // Use selected card data
+          const apiData = extractCardDataForAPI(state.runnerSelectionId, state);
+          if (apiData) {
+            const cardTitle = state.cards.find(card => card.id === state.runnerSelectionId)?.title || state.runnerSelectionId;
+            summary.push('Processing selected object: ' + cardTitle);
+            dataToProcess.push(apiData);
+            rawDataForSHAP = apiData;
+          } else {
+            throw new Error('Selected object not found or has no valid data');
           }
         }
 
-        // Only process single data if there are no bulk uploads
-        if (!hasBulkData) {
-          // Determine what single data to process
-          let dataToProcess = [];
-          
-          if (state.uploads.single) {
-            // Use uploaded single file data
-            summary.push('Processing single JSON: ' + state.uploads.single.name);
-            const fileResult = await exoScanAPI.processFileUpload(state.uploads.single.file, 'single');
-            
-            if (fileResult.success) {
-              dataToProcess.push(fileResult.data);
-            } else {
-              throw new Error('Failed to process single file: ' + fileResult.error);
-            }
-          } else if (state.runnerSelectionId) {
-            // Use selected card data
-            const apiData = extractCardDataForAPI(state.runnerSelectionId, state);
-            if (apiData) {
-              const cardTitle = state.cards.find(card => card.id === state.runnerSelectionId)?.title || state.runnerSelectionId;
-              summary.push('Processing selected object: ' + cardTitle);
-              dataToProcess.push(apiData);
-            } else {
-              throw new Error('Selected object not found or has no valid data');
-            }
-          }
+        if (dataToProcess.length === 0) {
+          throw new Error('No valid single data to process. Please select an object or upload a single JSON file.');
+        }
 
-          if (dataToProcess.length === 0) {
-            throw new Error('No valid data to process. Please select an object or upload files.');
-          }
+        pushLog(state, elements.outputLog, summary.join('. ') + '. Starting single prediction...');
+        
+        // Debug: Log the data being sent to the API
+        if (dataToProcess.length === 1) {
+          pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
+        }
 
-          pushLog(state, elements.outputLog, summary.join('. ') + '. Starting predictions...');
-          
-          // Debug: Log the data being sent to the API
-          if (dataToProcess.length === 1) {
-            pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
-          }
-
-          // Make API calls for single predictions
-          if (dataToProcess.length === 1) {
-            // Single prediction
-            const result = await exoScanAPI.predictSingle(dataToProcess[0]);
-            if (result.success) {
-              predictionResults.push({ success: true, data: result.data });
-              pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
-            } else {
-              throw new Error('Prediction failed: ' + result.error);
-            }
-          } else {
-            // Multiple single predictions
-            pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects...`);
-            
-            for (let i = 0; i < dataToProcess.length; i++) {
-              try {
-                const result = await exoScanAPI.predictSingle(dataToProcess[i]);
-                if (result.success) {
-                  predictionResults.push({ success: true, data: result.data });
-                } else {
-                  predictionResults.push({ success: false, error: result.error });
-                }
-              } catch (error) {
-                predictionResults.push({ success: false, error: error.message });
-              }
-            }
-            
-            const successCount = predictionResults.filter(r => r.success).length;
-            pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${dataToProcess.length} successful`);
-          }
+        // Make API call for single prediction
+        const result = await exoScanAPI.predictSingle(dataToProcess[0]);
+        if (result.success) {
+          predictionResults.push({ success: true, data: result.data });
+          pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
         } else {
-          // For bulk data, just log the summary
-          pushLog(state, elements.outputLog, summary.join('. ') + '. Bulk processing completed.');
+          throw new Error('Prediction failed: ' + result.error);
         }
 
         // Display results
         displayPredictionResults(predictionResults, elements, state);
         
-        // Optional: Generate SHAP analysis for the first successful prediction
-        const firstSuccess = predictionResults.find(r => r.success);
-        if (firstSuccess && predictionResults.length === 1) {
+        // Generate SHAP analysis for single prediction
+        if (rawDataForSHAP && predictionResults.length === 1) {
           pushLog(state, elements.outputLog, 'Generating SHAP explanation...');
           try {
-            const rawData = dataToProcess[0];
-            const shapResult = await exoScanAPI.generateSHAPAnalysis(rawData);
+            const shapResult = await exoScanAPI.generateSHAPAnalysis(rawDataForSHAP);
             if (shapResult.success) {
               displaySHAPResults(shapResult.data, elements, state);
               pushLog(state, elements.outputLog, 'SHAP analysis completed');
@@ -1103,14 +1040,91 @@
 
       } catch (error) {
         pushLog(state, elements.outputLog, 'Error: ' + error.message);
-        console.error('Prediction error:', error);
+        console.error('Single prediction error:', error);
       } finally {
         // Reset button
-        elements.runButton.disabled = false;
+        elements.runSingleButton.disabled = false;
         
         // Hide loading animation
-        const buttonText = elements.runButton.querySelector('.button-text');
-        const loadingSpinner = elements.runButton.querySelector('.loading-spinner');
+        const buttonText = elements.runSingleButton.querySelector('.button-text');
+        const loadingSpinner = elements.runSingleButton.querySelector('.loading-spinner');
+        if (buttonText) buttonText.style.display = 'block';
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+      }
+    });
+  }
+
+  function initRunBulkAction(elements, state) {
+    if (!elements.runBulkButton) {
+      return;
+    }
+
+    elements.runBulkButton.addEventListener('click', async () => {
+      // Provide immediate user feedback
+      elements.runBulkButton.disabled = true;
+      
+      // Show loading animation
+      const buttonText = elements.runBulkButton.querySelector('.button-text');
+      const loadingSpinner = elements.runBulkButton.querySelector('.loading-spinner');
+      if (buttonText) buttonText.style.display = 'none';
+      if (loadingSpinner) loadingSpinner.style.display = 'flex';
+      
+      try {
+        const summary = [];
+        let predictionResults = [];
+
+        // Check if we have bulk uploads
+        if (state.uploads.bulk.length === 0) {
+          throw new Error('No bulk files uploaded. Please upload CSV or JSON files for bulk processing.');
+        }
+
+        summary.push(`Processing ${state.uploads.bulk.length} bulk file(s)`);
+        
+        for (const bulkFile of state.uploads.bulk) {
+          pushLog(state, elements.outputLog, `Processing bulk file: ${bulkFile.name}`);
+          
+          // Use the bulk API endpoint
+          const fileResult = await exoScanAPI.predictBulkFile(bulkFile.file, true); // has_raw_features = true
+          
+          if (fileResult.success) {
+            // Extract predictions from the bulk result
+            const predictions = fileResult.data.data.predictions || [];
+            const statistics = fileResult.data.data.statistics || {};
+            
+            pushLog(state, elements.outputLog, `✓ Bulk file processed: ${predictions.length} predictions generated`);
+            pushLog(state, elements.outputLog, `Statistics: ${JSON.stringify(statistics)}`);
+            
+            // Store bulk results for download
+            state.bulkResults = fileResult.data;
+            
+            // Enable download button
+            if (elements.bulkDownloadButton) {
+              elements.bulkDownloadButton.disabled = false;
+            }
+            
+            // Add all predictions to results
+            predictions.forEach(pred => {
+              predictionResults.push({ success: true, data: pred });
+            });
+          } else {
+            pushLog(state, elements.outputLog, `✗ Failed to process ${bulkFile.name}: ${fileResult.error}`);
+          }
+        }
+
+        // Display results
+        displayPredictionResults(predictionResults, elements, state);
+        pushLog(state, elements.outputLog, summary.join('. ') + '. Bulk processing completed.');
+
+      } catch (error) {
+        pushLog(state, elements.outputLog, 'Error: ' + error.message);
+        console.error('Bulk prediction error:', error);
+      } finally {
+        // Reset button
+        elements.runBulkButton.disabled = false;
+        
+        // Hide loading animation
+        const buttonText = elements.runBulkButton.querySelector('.button-text');
+        const loadingSpinner = elements.runBulkButton.querySelector('.loading-spinner');
         if (buttonText) buttonText.style.display = 'block';
         if (loadingSpinner) loadingSpinner.style.display = 'none';
       }
