@@ -60,11 +60,9 @@ Traditional exoplanet detection requires specialized knowledge and complex tools
 ```bash
 # Required
 Python 3.8+
-Node.js 16+ (for development)
 Git
 
 # Optional (for development)
-Docker
 Virtual Environment
 ```
 
@@ -75,6 +73,7 @@ Virtual Environment
    git clone https://github.com/noahfavreau/nasa-space-apps-2025.git
    cd nasa-space-apps-2025
    ```
+   Note: please have more than 8Gb of ram for proper installing. Otherwise, it just may not be able to install.
 
 2. **Set up Python environment**
    ```bash
@@ -96,13 +95,6 @@ Virtual Environment
    cd public
    python -m http.server 8000
    ```
-
-### Using Docker (Alternative)
-
-```bash
-docker build -t exoscan .
-docker run -p 8080:8080 exoscan
-```
 
 ## 📖 Usage
 
