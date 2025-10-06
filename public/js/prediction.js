@@ -1593,7 +1593,8 @@
   function mapFile(file) {
     return {
       name: file.name,
-      size: file.size
+      size: file.size,
+      file: file  // Store the actual File object
     };
   }
 
