@@ -968,34 +968,11 @@
       try {
         const summary = [];
         let predictionResults = [];
+        let hasBulkData = false;
 
-        // Determine what data to process
-        let dataToProcess = [];
-        
-        if (state.uploads.single) {
-          // Use uploaded single file data
-          summary.push('Processing single JSON: ' + state.uploads.single.name);
-          const fileResult = await exoScanAPI.processFileUpload(state.uploads.single.file, 'single');
-          
-          if (fileResult.success) {
-            dataToProcess.push(fileResult.data);
-          } else {
-            throw new Error('Failed to process single file: ' + fileResult.error);
-          }
-        } else if (state.runnerSelectionId) {
-          // Use selected card data
-          const apiData = extractCardDataForAPI(state.runnerSelectionId, state);
-          if (apiData) {
-            const cardTitle = state.cards.find(card => card.id === state.runnerSelectionId)?.title || state.runnerSelectionId;
-            summary.push('Processing selected object: ' + cardTitle);
-            dataToProcess.push(apiData);
-          } else {
-            throw new Error('Selected object not found or has no valid data');
-          }
-        }
-
-        // Process bulk uploads
+        // Check if we have bulk uploads first
         if (state.uploads.bulk.length > 0) {
+          hasBulkData = true;
           summary.push(`Processing ${state.uploads.bulk.length} bulk file(s)`);
           
           for (const bulkFile of state.uploads.bulk) {
@@ -1030,46 +1007,77 @@
           }
         }
 
-        if (dataToProcess.length === 0 && predictionResults.length === 0) {
-          throw new Error('No valid data to process. Please select an object or upload files.');
-        }
-
-        pushLog(state, elements.outputLog, summary.join('. ') + '. Starting predictions...');
-        
-        // Debug: Log the data being sent to the API
-        if (dataToProcess.length === 1) {
-          pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
-        }
-
-        // Make API calls for predictions (only for single objects, bulk files are already processed)
-        if (dataToProcess.length === 1 && predictionResults.length === 0) {
-          // Single prediction
-          const result = await exoScanAPI.predictSingle(dataToProcess[0]);
-          if (result.success) {
-            predictionResults.push({ success: true, data: result.data });
-            pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
-          } else {
-            throw new Error('Prediction failed: ' + result.error);
-          }
-        } else if (dataToProcess.length > 1 && predictionResults.length === 0) {
-          // Batch predictions for individual objects (not bulk files)
-          pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects...`);
+        // Only process single data if there are no bulk uploads
+        if (!hasBulkData) {
+          // Determine what single data to process
+          let dataToProcess = [];
           
-          for (let i = 0; i < dataToProcess.length; i++) {
-            try {
-              const result = await exoScanAPI.predictSingle(dataToProcess[i]);
-              if (result.success) {
-                predictionResults.push({ success: true, data: result.data });
-              } else {
-                predictionResults.push({ success: false, error: result.error });
-              }
-            } catch (error) {
-              predictionResults.push({ success: false, error: error.message });
+          if (state.uploads.single) {
+            // Use uploaded single file data
+            summary.push('Processing single JSON: ' + state.uploads.single.name);
+            const fileResult = await exoScanAPI.processFileUpload(state.uploads.single.file, 'single');
+            
+            if (fileResult.success) {
+              dataToProcess.push(fileResult.data);
+            } else {
+              throw new Error('Failed to process single file: ' + fileResult.error);
+            }
+          } else if (state.runnerSelectionId) {
+            // Use selected card data
+            const apiData = extractCardDataForAPI(state.runnerSelectionId, state);
+            if (apiData) {
+              const cardTitle = state.cards.find(card => card.id === state.runnerSelectionId)?.title || state.runnerSelectionId;
+              summary.push('Processing selected object: ' + cardTitle);
+              dataToProcess.push(apiData);
+            } else {
+              throw new Error('Selected object not found or has no valid data');
             }
           }
+
+          if (dataToProcess.length === 0) {
+            throw new Error('No valid data to process. Please select an object or upload files.');
+          }
+
+          pushLog(state, elements.outputLog, summary.join('. ') + '. Starting predictions...');
           
-          const successCount = predictionResults.filter(r => r.success).length;
-          pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${dataToProcess.length} successful`);
+          // Debug: Log the data being sent to the API
+          if (dataToProcess.length === 1) {
+            pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
+          }
+
+          // Make API calls for single predictions
+          if (dataToProcess.length === 1) {
+            // Single prediction
+            const result = await exoScanAPI.predictSingle(dataToProcess[0]);
+            if (result.success) {
+              predictionResults.push({ success: true, data: result.data });
+              pushLog(state, elements.outputLog, '✓ Single prediction completed successfully');
+            } else {
+              throw new Error('Prediction failed: ' + result.error);
+            }
+          } else {
+            // Multiple single predictions
+            pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects...`);
+            
+            for (let i = 0; i < dataToProcess.length; i++) {
+              try {
+                const result = await exoScanAPI.predictSingle(dataToProcess[i]);
+                if (result.success) {
+                  predictionResults.push({ success: true, data: result.data });
+                } else {
+                  predictionResults.push({ success: false, error: result.error });
+                }
+              } catch (error) {
+                predictionResults.push({ success: false, error: error.message });
+              }
+            }
+            
+            const successCount = predictionResults.filter(r => r.success).length;
+            pushLog(state, elements.outputLog, `Batch processing completed: ${successCount}/${dataToProcess.length} successful`);
+          }
+        } else {
+          // For bulk data, just log the summary
+          pushLog(state, elements.outputLog, summary.join('. ') + '. Bulk processing completed.');
         }
 
         // Display results
@@ -1802,31 +1810,31 @@
     if (predictionData.probabilities) {
       const probabilities = predictionData.probabilities;
       
-      // Exoplanet probability
-      const exoplanetBar = resultsPanel.querySelector('.exoplanet-bar');
-      const exoplanetValue = resultsPanel.querySelector('.exoplanet-bar').parentElement.querySelector('.probability-value');
-      if (exoplanetBar && probabilities.Exoplanet !== undefined) {
-        const percentage = (probabilities.Exoplanet * 100).toFixed(1);
-        exoplanetBar.style.width = `${percentage}%`;
-        exoplanetValue.textContent = `${percentage}%`;
+      // Confirmed probability
+      const confirmedBar = resultsPanel.querySelector('.confirmed-bar');
+      const confirmedValue = resultsPanel.querySelector('.confirmed-bar').parentElement.querySelector('.probability-value');
+      if (confirmedBar && probabilities.Confirmed !== undefined) {
+        const percentage = (probabilities.Confirmed * 100).toFixed(1);
+        confirmedBar.style.width = `${percentage}%`;
+        confirmedValue.textContent = `${percentage}%`;
       }
 
-      // Uncertain probability
-      const uncertainBar = resultsPanel.querySelector('.uncertain-bar');
-      const uncertainValue = resultsPanel.querySelector('.uncertain-bar').parentElement.querySelector('.probability-value');
-      if (uncertainBar && probabilities.Uncertain !== undefined) {
-        const percentage = (probabilities.Uncertain * 100).toFixed(1);
-        uncertainBar.style.width = `${percentage}%`;
-        uncertainValue.textContent = `${percentage}%`;
+      // Candidate probability
+      const candidateBar = resultsPanel.querySelector('.candidate-bar');
+      const candidateValue = resultsPanel.querySelector('.candidate-bar').parentElement.querySelector('.probability-value');
+      if (candidateBar && probabilities.Candidate !== undefined) {
+        const percentage = (probabilities.Candidate * 100).toFixed(1);
+        candidateBar.style.width = `${percentage}%`;
+        candidateValue.textContent = `${percentage}%`;
       }
 
-      // Not Exoplanet probability
-      const notExoplanetBar = resultsPanel.querySelector('.not-exoplanet-bar');
-      const notExoplanetValue = resultsPanel.querySelector('.not-exoplanet-bar').parentElement.querySelector('.probability-value');
-      if (notExoplanetBar && probabilities['Not Exoplanet'] !== undefined) {
-        const percentage = (probabilities['Not Exoplanet'] * 100).toFixed(1);
-        notExoplanetBar.style.width = `${percentage}%`;
-        notExoplanetValue.textContent = `${percentage}%`;
+      // False Positive probability
+      const falsePositiveBar = resultsPanel.querySelector('.false-positive-bar');
+      const falsePositiveValue = resultsPanel.querySelector('.false-positive-bar').parentElement.querySelector('.probability-value');
+      if (falsePositiveBar && probabilities['False Positive'] !== undefined) {
+        const percentage = (probabilities['False Positive'] * 100).toFixed(1);
+        falsePositiveBar.style.width = `${percentage}%`;
+        falsePositiveValue.textContent = `${percentage}%`;
       }
     }
 
