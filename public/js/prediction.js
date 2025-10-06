@@ -1083,31 +1083,69 @@
         for (const bulkFile of state.uploads.bulk) {
           pushLog(state, elements.outputLog, `Processing bulk file: ${bulkFile.name}`);
           
-          // Use the bulk API endpoint
-          const fileResult = await exoScanAPI.predictBulkFile(bulkFile.file, true); // has_raw_features = true
-          
-          if (fileResult.success) {
-            // Extract predictions from the bulk result
-            const predictions = fileResult.data.data.predictions || [];
-            const statistics = fileResult.data.data.statistics || {};
+          try {
+            // Read and parse the bulk file
+            const fileContent = await bulkFile.file.text();
+            let bulkData;
             
-            pushLog(state, elements.outputLog, `✓ Bulk file processed: ${predictions.length} predictions generated`);
-            pushLog(state, elements.outputLog, `Statistics: ${JSON.stringify(statistics)}`);
-            
-            // Store bulk results for download
-            state.bulkResults = fileResult.data;
-            
-            // Enable download button
-            if (elements.bulkDownloadButton) {
-              elements.bulkDownloadButton.disabled = false;
+            if (bulkFile.file.name.toLowerCase().endsWith('.json')) {
+              bulkData = JSON.parse(fileContent);
+              // Handle single object or array
+              if (!Array.isArray(bulkData)) {
+                bulkData = [bulkData];
+              }
+            } else if (bulkFile.file.name.toLowerCase().endsWith('.csv')) {
+              // Simple CSV parsing for the expected format
+              const lines = fileContent.trim().split('\n');
+              const headers = lines[0].split(',').map(h => h.trim());
+              bulkData = [];
+              
+              for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => parseFloat(v.trim()));
+                const obj = {};
+                headers.forEach((header, index) => {
+                  obj[header] = values[index];
+                });
+                bulkData.push(obj);
+              }
+            } else {
+              throw new Error(`Unsupported file format: ${bulkFile.file.name}`);
             }
             
-            // Add all predictions to results
-            predictions.forEach(pred => {
-              predictionResults.push({ success: true, data: pred });
-            });
-          } else {
-            pushLog(state, elements.outputLog, `✗ Failed to process ${bulkFile.name}: ${fileResult.error}`);
+            pushLog(state, elements.outputLog, `Found ${bulkData.length} objects in ${bulkFile.name}`);
+            
+            // Process each object individually using single prediction API
+            let successCount = 0;
+            for (let i = 0; i < bulkData.length; i++) {
+              try {
+                const obj = bulkData[i];
+                
+                // Ensure insolation_flux is converted to insolation flux if needed
+                if ('insolation_flux' in obj && !('insolation flux' in obj)) {
+                  obj['insolation flux'] = obj['insolation_flux'];
+                  delete obj['insolation_flux'];
+                }
+                
+                pushLog(state, elements.outputLog, `Processing object ${i+1}/${bulkData.length}: ${obj.name || 'Unnamed'}`);
+                
+                const result = await exoScanAPI.predictSingle(obj);
+                if (result.success) {
+                  predictionResults.push({ success: true, data: result.data });
+                  successCount++;
+                } else {
+                  predictionResults.push({ success: false, error: result.error, objectIndex: i+1 });
+                  pushLog(state, elements.outputLog, `✗ Failed object ${i+1}: ${result.error}`);
+                }
+              } catch (objError) {
+                predictionResults.push({ success: false, error: objError.message, objectIndex: i+1 });
+                pushLog(state, elements.outputLog, `✗ Error processing object ${i+1}: ${objError.message}`);
+              }
+            }
+            
+            pushLog(state, elements.outputLog, `✓ Bulk file processed: ${successCount}/${bulkData.length} successful predictions`);
+            
+          } catch (fileError) {
+            pushLog(state, elements.outputLog, `✗ Failed to process ${bulkFile.name}: ${fileError.message}`);
           }
         }
 
