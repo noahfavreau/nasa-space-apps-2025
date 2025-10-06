@@ -1,34 +1,34 @@
 {
   "catboost": {
-    "iterations": 449,
+    "iterations": 257,
     "depth": 9,
-    "learning_rate": 0.07452489162580808,
-    "l2_leaf_reg": 9.624071790339087,
-    "task_type": "CPU"
+    "learning_rate": 0.10835900503937275,
+    "l2_leaf_reg": 6.601543790141492,
+    "task_type": "GPU"
   },
   "lightgbm": {
-    "learning_rate": 0.1656477472261641,
-    "num_leaves": 112,
+    "learning_rate": 0.04049425311815516,
+    "num_leaves": 124,
     "max_depth": 15,
-    "min_child_samples": 13,
-    "subsample": 0.5848078151470397,
-    "colsample_bytree": 0.7191904741720603
+    "min_child_samples": 23,
+    "subsample": 0.6256612107782468,
+    "colsample_bytree": 0.680434041472283
   },
   "xgboost": {
-    "learning_rate": 0.06407845536188769,
+    "learning_rate": 0.04147560567717642,
     "max_depth": 10,
-    "subsample": 0.6367951683747665,
-    "colsample_bytree": 0.9069731639862751,
-    "n_estimators": 186
+    "subsample": 0.8728060635232106,
+    "colsample_bytree": 0.9003172322935143,
+    "n_estimators": 203
   },
   "tabnet": {
     "optimizer_fn": "adam",
     "n_d": 8,
-    "n_a": 32,
+    "n_a": 56,
     "n_steps": 3,
-    "gamma": 1.1,
-    "lambda_sparse": 0.00019251047365347084,
-    "lr": 0.0012922815951897887,
-    "momentum": 0.23165072255889047
+    "gamma": 1.3,
+    "lambda_sparse": 3.840294567060368e-06,
+    "lr": 0.0038910714163218237,
+    "momentum": 0.06587291286005277
   }
 }
