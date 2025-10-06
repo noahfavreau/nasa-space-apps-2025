@@ -1891,9 +1891,9 @@
     }
 
     // Update probability bars to show distribution
-    const confirmedBar = resultsPanel.querySelector('.probability-bar--confirmed .probability-fill');
-    const candidateBar = resultsPanel.querySelector('.probability-bar--candidate .probability-fill');
-    const falsePositiveBar = resultsPanel.querySelector('.probability-bar--false-positive .probability-fill');
+    const confirmedBar = resultsPanel.querySelector('.confirmed-bar');
+    const candidateBar = resultsPanel.querySelector('.candidate-bar');
+    const falsePositiveBar = resultsPanel.querySelector('.false-positive-bar');
 
     if (confirmedBar && candidateBar && falsePositiveBar) {
       const confirmedPercent = (confirmedCount / total * 100).toFixed(1);
@@ -1904,14 +1904,16 @@
       candidateBar.style.width = `${candidatePercent}%`;
       falsePositiveBar.style.width = `${falsePositivePercent}%`;
 
-      // Update percentage labels
-      const confirmedPercentLabel = resultsPanel.querySelector('.probability-bar--confirmed .probability-percentage');
-      const candidatePercentLabel = resultsPanel.querySelector('.probability-bar--candidate .probability-percentage');
-      const falsePositivePercentLabel = resultsPanel.querySelector('.probability-bar--false-positive .probability-percentage');
-
-      if (confirmedPercentLabel) confirmedPercentLabel.textContent = `${confirmedPercent}%`;
-      if (candidatePercentLabel) candidatePercentLabel.textContent = `${candidatePercent}%`;
-      if (falsePositivePercentLabel) falsePositivePercentLabel.textContent = `${falsePositivePercent}%`;
+      // Update percentage labels - find the probability-value spans in each probability-bar
+      const probabilityBars = resultsPanel.querySelectorAll('.probability-bar');
+      probabilityBars.forEach((bar, index) => {
+        const probabilityValue = bar.querySelector('.probability-value');
+        if (probabilityValue) {
+          if (index === 0) probabilityValue.textContent = `${confirmedPercent}%`;
+          if (index === 1) probabilityValue.textContent = `${candidatePercent}%`;
+          if (index === 2) probabilityValue.textContent = `${falsePositivePercent}%`;
+        }
+      });
     }
   }
 
