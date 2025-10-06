@@ -2551,20 +2551,29 @@ body.prediction-page.is-inspector-open{
 .bar {
     height: 24px;
     border-radius: 12px;
-    transition: width 0.8s ease-in-out;
+    transition: none; /* Remove animation */
     position: relative;
     overflow: hidden;
 }
 
 .bar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 2s infinite;
+    display: none; /* Remove shimmer animation */
+}
+
+/* Plain color bars for predictions */
+.confirmed-bar {
+    background: var(--color-success) !important;
+    transition: none;
+}
+
+.candidate-bar {
+    background: var(--color-warning) !important;
+    transition: none;
+}
+
+.false-positive-bar {
+    background: var(--color-danger) !important;
+    transition: none;
 }
 
 @keyframes shimmer {
