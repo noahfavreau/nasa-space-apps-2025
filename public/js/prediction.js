@@ -865,9 +865,9 @@
         
         predictions.forEach((pred, index) => {
           const name = pred.name || `Object_${index + 1}`;
-          const prediction = pred.prediction || 'Unknown';
-          const confidence = pred.confidence || 0;
-          const predictionClass = pred.prediction_class || 'Unknown';
+          const prediction = pred.prediction || pred.predicted_class || 'Unknown';
+          const confidence = (pred.confidence || pred.probability || 0).toFixed(4);
+          const predictionClass = pred.prediction_class || pred.predicted_class || prediction;
           
           csvContent += `"${name}","${prediction}",${confidence},"${predictionClass}"\n`;
         });
@@ -1836,10 +1836,15 @@
     if (successfulResults.length > 0) {
       pushLog(state, elements.outputLog, `Prediction Results (${successfulResults.length} successful):`);
       
-      // Display the first successful result in the UI
-      const firstResult = successfulResults[0];
-      if (firstResult.data) {
-        displayPredictionCard(firstResult.data, elements);
+      if (successfulResults.length === 1) {
+        // Single result - display the full prediction card
+        const firstResult = successfulResults[0];
+        if (firstResult.data) {
+          displayPredictionCard(firstResult.data, elements);
+        }
+      } else {
+        // Multiple results - display a summary card
+        displayBulkPredictionSummary(successfulResults, elements);
       }
       
       successfulResults.forEach((result, index) => {
@@ -1855,6 +1860,58 @@
       failedResults.forEach((result, index) => {
         pushLog(state, elements.outputLog, `  ${index + 1}. Error: ${result.error || 'Unknown error'}`);
       });
+    }
+  }
+
+  function displayBulkPredictionSummary(results, elements) {
+    const resultsPanel = document.getElementById('prediction-results-panel');
+    if (!resultsPanel) return;
+
+    // Calculate summary statistics
+    const predictions = results.map(r => r.data);
+    const confirmedCount = predictions.filter(p => p.predicted_label === 'Confirmed').length;
+    const candidateCount = predictions.filter(p => p.predicted_label === 'Candidate').length;
+    const falsePositiveCount = predictions.filter(p => p.predicted_label === 'False Positive').length;
+    const total = predictions.length;
+
+    // Show the results panel
+    resultsPanel.style.display = 'block';
+
+    // Update prediction label to show bulk summary
+    const predictionLabel = resultsPanel.querySelector('.prediction-label');
+    if (predictionLabel) {
+      predictionLabel.textContent = `Bulk Classification Results (${total} objects)`;
+    }
+
+    // Update confidence to show average
+    const avgConfidence = predictions.reduce((sum, p) => sum + (p.confidence || 0), 0) / total;
+    const confidenceValue = resultsPanel.querySelector('.confidence-value');
+    if (confidenceValue) {
+      confidenceValue.textContent = `${(avgConfidence * 100).toFixed(1)}%`;
+    }
+
+    // Update probability bars to show distribution
+    const confirmedBar = resultsPanel.querySelector('.probability-bar--confirmed .probability-fill');
+    const candidateBar = resultsPanel.querySelector('.probability-bar--candidate .probability-fill');
+    const falsePositiveBar = resultsPanel.querySelector('.probability-bar--false-positive .probability-fill');
+
+    if (confirmedBar && candidateBar && falsePositiveBar) {
+      const confirmedPercent = (confirmedCount / total * 100).toFixed(1);
+      const candidatePercent = (candidateCount / total * 100).toFixed(1);
+      const falsePositivePercent = (falsePositiveCount / total * 100).toFixed(1);
+
+      confirmedBar.style.width = `${confirmedPercent}%`;
+      candidateBar.style.width = `${candidatePercent}%`;
+      falsePositiveBar.style.width = `${falsePositivePercent}%`;
+
+      // Update percentage labels
+      const confirmedPercentLabel = resultsPanel.querySelector('.probability-bar--confirmed .probability-percentage');
+      const candidatePercentLabel = resultsPanel.querySelector('.probability-bar--candidate .probability-percentage');
+      const falsePositivePercentLabel = resultsPanel.querySelector('.probability-bar--false-positive .probability-percentage');
+
+      if (confirmedPercentLabel) confirmedPercentLabel.textContent = `${confirmedPercent}%`;
+      if (candidatePercentLabel) candidatePercentLabel.textContent = `${candidatePercent}%`;
+      if (falsePositivePercentLabel) falsePositivePercentLabel.textContent = `${falsePositivePercent}%`;
     }
   }
 
