@@ -81,6 +81,193 @@ def preditiondata():
     return jsonify(model.predict_from_raw_features(ordered_values)), 200
 
 
+# API: /api/prediction/bulk
+@app.route("/api/prediction/bulk", methods=["POST"])
+def bulk_prediction():
+    """
+    Handle bulk predictions from JSON data or file uploads
+    """
+    global model
+    try:
+        # Check if it's a file upload or JSON data
+        if 'file' in request.files:
+            # Handle file upload
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({"success": False, "error": "No file selected"}), 400
+            
+            # Process the uploaded file
+            if file.filename.lower().endswith('.csv'):
+                # Read CSV file
+                df = pd.read_csv(file)
+                has_raw_features = request.form.get('has_raw_features', 'true').lower() == 'true'
+                
+                # Process the data
+                result = model.predict_batch_from_dataframe(df, has_raw_features=has_raw_features)
+                
+                if result['success']:
+                    return jsonify({
+                        "success": True,
+                        "data": {
+                            "predictions": result['data'].to_dict('records'),
+                            "statistics": result['statistics']
+                        },
+                        "error": None
+                    }), 200
+                else:
+                    return jsonify(result), 500
+                    
+            elif file.filename.lower().endswith('.json'):
+                # Read JSON file
+                import json
+                content = file.read().decode('utf-8')
+                data = json.loads(content)
+                
+                # Handle single object or array of objects
+                if isinstance(data, dict):
+                    data = [data]
+                
+                predictions = []
+                for item in data:
+                    # Map insolation_flux to insolation flux if needed
+                    if "insolation_flux" in item:
+                        item["insolation flux"] = item.pop("insolation_flux")
+                    
+                    # Extract ordered values
+                    required_fields = [
+                        "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+                        "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+                        "insolation flux", "stellar_temperature"
+                    ]
+                    ordered_values = [item[field] for field in required_fields]
+                    pred_result = model.predict_from_raw_features(ordered_values)
+                    predictions.append(pred_result)
+                
+                return jsonify({
+                    "success": True,
+                    "data": {
+                        "predictions": predictions,
+                        "total_processed": len(predictions)
+                    },
+                    "error": None
+                }), 200
+            else:
+                return jsonify({"success": False, "error": "Unsupported file format"}), 400
+        
+        else:
+            # Handle JSON data in request body
+            data = request.get_json()
+            if not data:
+                return jsonify({"success": False, "error": "No data provided"}), 400
+            
+            # Handle single object or array of objects
+            if isinstance(data, dict):
+                data = [data]
+            
+            predictions = []
+            for item in data:
+                # Map insolation_flux to insolation flux if needed
+                if "insolation_flux" in item:
+                    item["insolation flux"] = item.pop("insolation_flux")
+                
+                # Extract ordered values
+                required_fields = [
+                    "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+                    "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+                    "insolation flux", "stellar_temperature"
+                ]
+                ordered_values = [item[field] for field in required_fields]
+                pred_result = model.predict_from_raw_features(ordered_values)
+                predictions.append(pred_result)
+            
+            return jsonify({
+                "success": True,
+                "data": {
+                    "predictions": predictions,
+                    "total_processed": len(predictions)
+                },
+                "error": None
+            }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "data": None,
+            "error": str(e)
+        }), 500
+
+
+# API: /api/prediction/bulk/csv
+@app.route("/api/prediction/bulk/csv", methods=["POST"])
+def bulk_prediction_csv():
+    """
+    Bulk prediction with CSV output for download
+    """
+    global model
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "error": "No file provided"}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"success": False, "error": "No file selected"}), 400
+        
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({"success": False, "error": "Only CSV files are supported for this endpoint"}), 400
+        
+        # Read the uploaded CSV
+        df = pd.read_csv(file)
+        has_raw_features = request.form.get('has_raw_features', 'true').lower() == 'true'
+        
+        # Process with the classifier
+        result = model.predict_batch_from_dataframe(df, has_raw_features=has_raw_features)
+        
+        if result['success']:
+            # Convert results to CSV format for response
+            from flask import make_response
+            import io
+            
+            output = io.StringIO()
+            result['data'].to_csv(output, index=False)
+            output.seek(0)
+            
+            response = make_response(output.getvalue())
+            response.headers["Content-Disposition"] = f"attachment; filename=predictions_{file.filename}"
+            response.headers["Content-type"] = "text/csv"
+            
+            return response
+        else:
+            return jsonify(result), 500
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# API: /api/prediction/status
+@app.route("/api/prediction/status", methods=["GET"])
+def prediction_status():
+    """
+    Get API status and model information
+    """
+    global model
+    try:
+        model_info = model.get_model_info()
+        return jsonify({
+            "success": True,
+            "status": "ready",
+            "model_info": model_info
+        }), 200
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "status": "error",
+            "error": str(e)
+        }), 500
+
+
 # API: /api/prediction/graph
 @app.route("/api/prediction/graph", methods=["GET"])
 def prediction_graph():
@@ -179,4 +366,4 @@ def generate_shap_graph():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=8080, ssl_context="adhoc")
+    app.run(debug=True, host="0.0.0.0", port=8080)

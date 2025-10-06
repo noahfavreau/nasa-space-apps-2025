@@ -11,9 +11,12 @@ class ExoScanAPI {
     this.baseURL = baseURL;
     this.endpoints = {
       prediction: '/api/prediction/predictiondata',
+      bulk: '/api/prediction/bulk',
+      bulkCsv: '/api/prediction/bulk/csv',
       graph: '/api/prediction/graph', 
       fillExample: '/api/prediction/fillexample',
-      shapReport: '/api/report/shap'
+      shapReport: '/api/report/shap',
+      status: '/api/prediction/status'
     };
   }
 
@@ -214,6 +217,96 @@ class ExoScanAPI {
   }
 
   /**
+   * Bulk predict with file upload
+   */
+  async predictBulkFile(file, hasRawFeatures = true, downloadResults = false) {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('has_raw_features', hasRawFeatures.toString());
+
+      const endpoint = downloadResults ? this.endpoints.bulkCsv : this.endpoints.bulk;
+      
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (downloadResults) {
+        // For CSV download, return the blob
+        const blob = await response.blob();
+        return {
+          success: true,
+          data: blob,
+          filename: `predictions_${file.name}`,
+          error: null
+        };
+      } else {
+        // For JSON response
+        const result = await response.json();
+        return result;
+      }
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Bulk predict with JSON data
+   */
+  async predictBulkData(dataArray) {
+    try {
+      const response = await this._fetch(this.endpoints.bulk, {
+        method: 'POST',
+        body: JSON.stringify(dataArray)
+      });
+
+      return {
+        success: true,
+        data: response,
+        error: null
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Get API status and model information
+   */
+  async getStatus() {
+    try {
+      const response = await this._fetch(this.endpoints.status, {
+        method: 'GET'
+      });
+
+      return {
+        success: true,
+        data: response,
+        error: null
+      };
+    } catch (error) {
+      return {
+        success: false,
+        data: null,
+        error: error.message
+      };
+    }
+  }
+
+  /**
    * Process file upload for prediction
    */
   async processFileUpload(file, type = 'single') {
@@ -392,7 +485,7 @@ class ExoScanAPI {
 }
 
 // Create global instance
-const exoScanAPI = new ExoScanAPI('https://api.bottomlessswag.tech');
+const exoScanAPI = new ExoScanAPI('http://localhost:8080');
 
 // Export for module usage if needed
 if (typeof module !== 'undefined' && module.exports) {

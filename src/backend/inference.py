@@ -233,11 +233,11 @@ class ExoplanetClassifier:
         if isinstance(X, pd.DataFrame):
             X = X.values
         
-        # Get base model predictions
-        base_preds = self._get_base_predictions(X)
+        # Get base model probabilities (meta-features)
+        base_probs = self._get_base_probabilities(X)
         
         # Get meta-model predictions
-        meta_preds = self.meta_model.predict(base_preds)
+        meta_preds = self.meta_model.predict(base_probs)
         
         return meta_preds
     
@@ -278,8 +278,8 @@ class ExoplanetClassifier:
         prediction = self.predict(features)[0]
         probabilities = self.predict_proba(features)[0]
         
-        # Map class numbers to labels
-        class_labels = {0: "Exoplanet", 1: "Uncertain", 2: "Not Exoplanet"}
+        # Map class numbers to labels (according to training metrics)
+        class_labels = {0: "Confirmed", 1: "Candidate", 2: "False Positive"}
         
         result = {
             "predicted_class": int(prediction),
@@ -320,8 +320,8 @@ class ExoplanetClassifier:
         prediction = self.meta_model.predict(meta_features)[0]
         probabilities = self.meta_model.predict_proba(meta_features)[0]
         
-        # class numbers to labels
-        class_labels = {0: "Exoplanet", 1: "Uncertain", 2: "Not Exoplanet"}
+        # class numbers to labels (according to training metrics)
+        class_labels = {0: "Confirmed", 1: "Candidate", 2: "False Positive"}
         
         result = {
             "predicted_class": int(prediction),
@@ -360,6 +360,181 @@ class ExoplanetClassifier:
         
         return predictions
     
+    def predict_from_csv(self, csv_path: str, output_path: str = None, has_raw_features: bool = True, 
+                         progress_callback=None) -> Dict[str, Any]:
+        """
+        Process a CSV file with bulk predictions and save results.
+        
+        Args:
+            csv_path: Path to the input CSV file
+            output_path: Path to save the results CSV file (optional)
+            has_raw_features: Whether the CSV contains raw astronomical features (True) or preprocessed features (False)
+            progress_callback: Optional callback function for progress reporting (receives percentage as int)
+            
+        Returns:
+            Dictionary with processing results and statistics
+        """
+        try:
+            # Load the CSV file
+            df = pd.read_csv(csv_path)
+            total_samples = len(df)
+            print(f"Loaded CSV with {total_samples} rows and {len(df.columns)} columns")
+            
+            if progress_callback:
+                progress_callback(10)  # File loaded
+            
+            # Process the data in batches for large datasets
+            batch_size = 1000 if total_samples > 5000 else total_samples
+            predictions_list = []
+            probabilities_list = []
+            
+            for i in range(0, total_samples, batch_size):
+                batch_df = df.iloc[i:i + batch_size]
+                
+                if has_raw_features:
+                    # Preprocess the batch
+                    processed_batch = preprocess_for_prediction(batch_df)
+                    if i == 0:  # Only print this once
+                        print(f"Preprocessed data to {len(processed_batch.columns)} features")
+                    
+                    # Get predictions from raw features
+                    batch_predictions = self.predict_batch_from_raw_features(processed_batch.values)
+                    batch_probabilities = self.predict_proba(processed_batch.values)
+                else:
+                    # Data is already preprocessed, predict directly
+                    feature_columns = [col for col in batch_df.columns if col != 'disposition']
+                    features = batch_df[feature_columns]
+                    batch_predictions = self.predict(features.values)
+                    batch_probabilities = self.predict_proba(features.values)
+                
+                predictions_list.extend(batch_predictions)
+                probabilities_list.extend(batch_probabilities)
+                
+                # Progress reporting
+                progress = int(10 + (i + batch_size) / total_samples * 80)  # 10-90% for processing
+                if progress_callback:
+                    progress_callback(min(90, progress))
+                elif total_samples > 5000:  # Show progress for large datasets
+                    print(f"Processed {min(i + batch_size, total_samples)}/{total_samples} samples ({progress}%)")
+            
+            predictions = np.array(predictions_list)
+            probabilities = np.array(probabilities_list)
+            
+            # Create results DataFrame
+            results_df = df.copy()
+            
+            # Add prediction results
+            class_labels = {0: "Confirmed", 1: "Candidate", 2: "False Positive"}
+            results_df['predicted_class'] = predictions
+            results_df['predicted_label'] = [class_labels[pred] for pred in predictions]
+            results_df['confidence'] = np.max(probabilities, axis=1)
+            
+            # Add individual class probabilities
+            for i, label in class_labels.items():
+                results_df[f'prob_{label}'] = probabilities[:, i]
+            
+            if progress_callback:
+                progress_callback(95)  # Results prepared
+            
+            # Save results if output path provided
+            if output_path:
+                results_df.to_csv(output_path, index=False)
+                print(f"Results saved to {output_path}")
+            
+            # Calculate statistics
+            prediction_counts = pd.Series(predictions).value_counts().sort_index()
+            stats = {
+                "total_samples": len(df),
+                "predictions": {class_labels[i]: int(prediction_counts.get(i, 0)) for i in range(3)},
+                "average_confidence": float(np.mean(np.max(probabilities, axis=1))),
+                "processed_successfully": True,
+                "output_file": output_path
+            }
+            
+            if progress_callback:
+                progress_callback(100)  # Complete
+            
+            return {
+                "success": True,
+                "data": results_df,
+                "statistics": stats,
+                "error": None
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "data": None,
+                "statistics": None,
+                "error": f"Failed to process CSV: {str(e)}"
+            }
+    
+    def predict_batch_from_dataframe(self, df: pd.DataFrame, has_raw_features: bool = True) -> Dict[str, Any]:
+        """
+        Process a pandas DataFrame with bulk predictions.
+        
+        Args:
+            df: Input DataFrame
+            has_raw_features: Whether the DataFrame contains raw astronomical features (True) or preprocessed features (False)
+            
+        Returns:
+            Dictionary with processing results and statistics
+        """
+        try:
+            print(f"Processing DataFrame with {len(df)} rows and {len(df.columns)} columns")
+            
+            # Process the data
+            if has_raw_features:
+                # Preprocess the data first
+                processed_df = preprocess_for_prediction(df)
+                print(f"Preprocessed data to {len(processed_df.columns)} features")
+                
+                # Get predictions from raw features
+                predictions = self.predict_batch_from_raw_features(processed_df.values)
+                probabilities = self.predict_proba(processed_df.values)
+            else:
+                # Data is already preprocessed, predict directly
+                feature_columns = [col for col in df.columns if col != 'disposition']
+                features = df[feature_columns]
+                predictions = self.predict(features.values)
+                probabilities = self.predict_proba(features.values)
+            
+            # Create results DataFrame
+            results_df = df.copy()
+            
+            # Add prediction results
+            class_labels = {0: "Confirmed", 1: "Candidate", 2: "False Positive"}
+            results_df['predicted_class'] = predictions
+            results_df['predicted_label'] = [class_labels[pred] for pred in predictions]
+            results_df['confidence'] = np.max(probabilities, axis=1)
+            
+            # Add individual class probabilities
+            for i, label in class_labels.items():
+                results_df[f'prob_{label}'] = probabilities[:, i]
+            
+            # Calculate statistics
+            prediction_counts = pd.Series(predictions).value_counts().sort_index()
+            stats = {
+                "total_samples": len(df),
+                "predictions": {class_labels[i]: int(prediction_counts.get(i, 0)) for i in range(3)},
+                "average_confidence": float(np.mean(np.max(probabilities, axis=1)))
+            }
+            
+            return {
+                "success": True,
+                "data": results_df,
+                "statistics": stats,
+                "error": None
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "data": None,
+                "statistics": None,
+                "error": f"Failed to process DataFrame: {str(e)}"
+            }
+    
     def get_model_info(self) -> Dict[str, Any]:
         """Get information about the loaded models."""
         info = {
@@ -391,8 +566,9 @@ def load_classifier(model_dir: str = ".") -> ExoplanetClassifier:
 
 # example usage
 if __name__ == "__main__":    
-    # Load the classifier
-    classifier = load_classifier()
+    # Load the classifier with correct model directory
+    model_dir = "../model"
+    classifier = load_classifier(model_dir)
     
     print("="*60)
     print("TESTING WITH RAW ASTRONOMICAL FEATURES")

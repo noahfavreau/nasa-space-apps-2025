@@ -19,6 +19,7 @@
       singleUploadList: document.querySelector('[data-upload-list="single"]'),
       bulkUploadInput: document.querySelector('[data-action="upload-bulk"] input[type="file"]'),
       bulkUploadList: document.querySelector('[data-upload-list="bulk"]'),
+      bulkDownloadButton: document.querySelector('[data-action="download-bulk"]'),
       remoteLinkButton: document.querySelector('[data-action="link-remote"]'),
       runButton: document.querySelector('[data-action="run-prediction"]'),
       outputLog: document.querySelector('[data-output-log]'),
@@ -57,6 +58,7 @@
         single: null,
         bulk: []
       },
+      bulkResults: null, // Store bulk processing results for download
       logs: [],
       inspector: {
         activeCard: null,
@@ -99,6 +101,7 @@
     initSingleUpload(elements, state);
     initBulkUpload(elements, state);
     initBulkListRemoval(elements, state);
+    initBulkDownload(elements, state);
     initRunAction(elements, state);
     initRemoteLink(elements, state);
 
@@ -837,6 +840,57 @@
     });
   }
 
+  function initBulkDownload(elements, state) {
+    if (!elements.bulkDownloadButton) {
+      return;
+    }
+
+    elements.bulkDownloadButton.addEventListener('click', async () => {
+      if (!state.bulkResults || state.uploads.bulk.length === 0) {
+        pushLog(state, elements.outputLog, 'No bulk results available for download.');
+        return;
+      }
+
+      try {
+        elements.bulkDownloadButton.disabled = true;
+        elements.bulkDownloadButton.textContent = 'Preparing download...';
+
+        // Use the first bulk file for processing (simple implementation)
+        const firstBulkFile = state.uploads.bulk[0];
+        if (!firstBulkFile) {
+          throw new Error('No bulk file available');
+        }
+
+        pushLog(state, elements.outputLog, `Generating CSV download for ${firstBulkFile.name}...`);
+
+        // Request CSV download from the API
+        const result = await exoScanAPI.predictBulkFile(firstBulkFile.file, true, true); // download = true
+
+        if (result.success) {
+          // Create download link
+          const url = window.URL.createObjectURL(result.data);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = result.filename || 'bulk_predictions.csv';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          pushLog(state, elements.outputLog, `✓ Download started: ${a.download}`);
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        pushLog(state, elements.outputLog, `✗ Download failed: ${error.message}`);
+      } finally {
+        elements.bulkDownloadButton.disabled = false;
+        elements.bulkDownloadButton.textContent = 'Download Results';
+      }
+    });
+  }
+
   function initRemoteLink(elements, state) {
     if (!elements.remoteLinkButton || !elements.outputLog) {
       return;
@@ -945,20 +999,38 @@
           summary.push(`Processing ${state.uploads.bulk.length} bulk file(s)`);
           
           for (const bulkFile of state.uploads.bulk) {
-            const fileResult = await exoScanAPI.processFileUpload(bulkFile.file, 'bulk');
+            pushLog(state, elements.outputLog, `Processing bulk file: ${bulkFile.name}`);
+            
+            // Use the new bulk API endpoint
+            const fileResult = await exoScanAPI.predictBulkFile(bulkFile.file, true); // has_raw_features = true
+            
             if (fileResult.success) {
-              if (Array.isArray(fileResult.data)) {
-                dataToProcess.push(...fileResult.data);
-              } else {
-                dataToProcess.push(fileResult.data);
+              // Extract predictions from the bulk result
+              const predictions = fileResult.data.data.predictions || [];
+              const statistics = fileResult.data.data.statistics || {};
+              
+              pushLog(state, elements.outputLog, `✓ Bulk file processed: ${predictions.length} predictions generated`);
+              pushLog(state, elements.outputLog, `Statistics: ${JSON.stringify(statistics)}`);
+              
+              // Store bulk results for download
+              state.bulkResults = fileResult.data;
+              
+              // Enable download button
+              if (elements.bulkDownloadButton) {
+                elements.bulkDownloadButton.disabled = false;
               }
+              
+              // Add all predictions to results
+              predictions.forEach(pred => {
+                predictionResults.push({ success: true, data: pred });
+              });
             } else {
-              pushLog(state, elements.outputLog, `Warning: Failed to process ${bulkFile.name}: ${fileResult.error}`);
+              pushLog(state, elements.outputLog, `✗ Failed to process ${bulkFile.name}: ${fileResult.error}`);
             }
           }
         }
 
-        if (dataToProcess.length === 0) {
+        if (dataToProcess.length === 0 && predictionResults.length === 0) {
           throw new Error('No valid data to process. Please select an object or upload files.');
         }
 
@@ -969,8 +1041,8 @@
           pushLog(state, elements.outputLog, 'Debug: Sending data to API: ' + JSON.stringify(dataToProcess[0], null, 2));
         }
 
-        // Make API calls for predictions
-        if (dataToProcess.length === 1) {
+        // Make API calls for predictions (only for single objects, bulk files are already processed)
+        if (dataToProcess.length === 1 && predictionResults.length === 0) {
           // Single prediction
           const result = await exoScanAPI.predictSingle(dataToProcess[0]);
           if (result.success) {
@@ -979,8 +1051,8 @@
           } else {
             throw new Error('Prediction failed: ' + result.error);
           }
-        } else {
-          // Batch predictions - process one by one since backend expects single objects
+        } else if (dataToProcess.length > 1 && predictionResults.length === 0) {
+          // Batch predictions for individual objects (not bulk files)
           pushLog(state, elements.outputLog, `Processing ${dataToProcess.length} objects...`);
           
           for (let i = 0; i < dataToProcess.length; i++) {
