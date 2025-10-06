@@ -970,6 +970,12 @@
       if (buttonText) buttonText.style.display = 'none';
       if (loadingSpinner) loadingSpinner.style.display = 'flex';
       
+      // Hide SHAP panel initially (will be shown if single prediction succeeds)
+      const shapPanel = document.getElementById('shap-results-panel');
+      if (shapPanel) {
+        shapPanel.style.display = 'none';
+      }
+      
       try {
         const summary = [];
         let predictionResults = [];
@@ -1071,6 +1077,12 @@
       const loadingSpinner = elements.runBulkButton.querySelector('.loading-spinner');
       if (buttonText) buttonText.style.display = 'none';
       if (loadingSpinner) loadingSpinner.style.display = 'flex';
+      
+      // Hide SHAP panel when starting bulk processing
+      const shapPanel = document.getElementById('shap-results-panel');
+      if (shapPanel) {
+        shapPanel.style.display = 'none';
+      }
       
       try {
         const summary = [];
