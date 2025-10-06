@@ -128,20 +128,37 @@ def bulk_prediction():
                     data = [data]
                 
                 predictions = []
-                for item in data:
-                    # Map insolation_flux to insolation flux if needed
-                    if "insolation_flux" in item:
-                        item["insolation flux"] = item.pop("insolation_flux")
-                    
-                    # Extract ordered values
-                    required_fields = [
-                        "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
-                        "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
-                        "insolation flux", "stellar_temperature"
-                    ]
-                    ordered_values = [item[field] for field in required_fields]
-                    pred_result = model.predict_from_raw_features(ordered_values)
-                    predictions.append(pred_result)
+                for i, item in enumerate(data):
+                    try:
+                        # Map insolation_flux to insolation flux if needed
+                        if "insolation_flux" in item:
+                            item["insolation flux"] = item.pop("insolation_flux")
+                        
+                        # Extract ordered values with validation
+                        required_fields = [
+                            "orbital_period", "stellar_radius", "rate_of_ascension", "declination",
+                            "transit_duration", "transit_depth", "planet_radius", "planet_temperature",
+                            "insolation flux", "stellar_temperature"
+                        ]
+                        
+                        # Check for missing fields
+                        missing_fields = [field for field in required_fields if field not in item]
+                        if missing_fields:
+                            return jsonify({
+                                "success": False,
+                                "error": f"Missing fields in item {i+1}: {missing_fields}",
+                                "hint": "Use 'insolation_flux' (underscore) or 'insolation flux' (space)"
+                            }), 400
+                        
+                        ordered_values = [item[field] for field in required_fields]
+                        pred_result = model.predict_from_raw_features(ordered_values)
+                        predictions.append(pred_result)
+                        
+                    except Exception as e:
+                        return jsonify({
+                            "success": False,
+                            "error": f"Error processing item {i+1}: {str(e)}"
+                        }), 500
                 
                 return jsonify({
                     "success": True,

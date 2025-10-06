@@ -251,6 +251,30 @@ class ExoScanAPI {
         return result;
       }
     } catch (error) {
+      console.error('Bulk prediction error:', error);
+      
+      // Try to get more details from the response if it's an HTTP error
+      if (error.message.includes('HTTP')) {
+        try {
+          const response = await fetch(`${this.baseURL}${endpoint}`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error details:', errorText);
+            return {
+              success: false,
+              data: null,
+              error: `${error.message}. Server details: ${errorText}`
+            };
+          }
+        } catch (detailError) {
+          console.error('Failed to get error details:', detailError);
+        }
+      }
+      
       return {
         success: false,
         data: null,
